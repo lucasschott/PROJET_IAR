@@ -118,7 +118,7 @@ class ENV():
         self.direction_pred = np.random.random_sample()*2*math.pi
 
         #prey
-        self.prey_size = 7
+        self.prey_size = 9
         self.velocity_prey = 3
         self.rotation_prey = 8
         self.num_sensor_prey = 24
@@ -153,13 +153,13 @@ class ENV():
             real_pos[1] %= 512
         return 0
 
-
+    """
     def pred_observation(self):
         observation = np.zeros(12)
         for sensor in range(12): #nb sensors
             ray_direction = (self.direction_pred + math.pi/2 - sensor*math.radians(15)) % (2*math.pi)
-            for ray in range(8): #nb rays
-                ray_direction += math.radians(2)
+            for ray in range(3): #nb rays
+                ray_direction += math.radians(5)
                 ray_direction %= 2*math.pi
                 observation[sensor] = self.ray_casting(1,self.position_pred,
                         self.sensor_distance_pred,self.pred_size,
@@ -173,8 +173,8 @@ class ENV():
         observation = np.zeros(24)
         for sensor in range(12): #nb sensors
             ray_direction = (self.direction_preys[idx] + math.pi/2 - sensor*math.radians(15)) % (2*math.pi)
-            for ray in range(8): #nb rays
-                ray_direction += math.radians(2)
+            for ray in range(3): #nb rays
+                ray_direction += math.radians(5)
                 ray_direction %= 2*math.pi
                 observation[sensor] = self.ray_casting(1,self.position_preys[idx],
                         self.sensor_distance_prey,self.prey_size,
@@ -192,14 +192,8 @@ class ENV():
                 if observation[sensor] == 1:
                     break
         return list(observation)
-
-    def preys_observations(self):
-        input_preys = []
-        for i in range(self.num_preys):
-            input_preys.append(self.prey_observation(i))
-        return input_preys
-
     """
+
     def pred_observation(self):
         observation = list(np.zeros(12))
         angles = []
@@ -241,9 +235,13 @@ class ENV():
                 observation_pred[i] = 1
 
         return observation_prey + observation_pred
-    """
-
     
+    def preys_observations(self):
+        input_preys = []
+        for i in range(self.num_preys):
+            input_preys.append(self.prey_observation(i))
+        return input_preys
+
 
     def compute_swarm_density(self):
         num_prey_30m = []
@@ -377,7 +375,7 @@ def simulation(pred_indiv,prey_indiv,confusion,log,render=True):
         plt.imshow(env.map)
         plt.pause(0.01)
 
-    for step in range(20):
+    for step in range(2000):
         
         with torch.set_grad_enabled(False):
             pred_output = pred_nn.forward(input_pred)
@@ -411,6 +409,7 @@ def simulation(pred_indiv,prey_indiv,confusion,log,render=True):
 
     t2 = time.time()
     print("time step = {}".format(t2-t1))
+    
 
     if log:
         return fitness_pred, fitness_prey, survivorship, np.mean(swarm_density), np.mean(swarm_dispersion)

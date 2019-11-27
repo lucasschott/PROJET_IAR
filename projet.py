@@ -49,7 +49,7 @@ class Net(nn.Module):
 
 
 def eval_(pred_indiv,prey_indiv,confusion):
-    pred_fitness, prey_fitness = sim.simulation(pred_indiv,prey_indiv,confusion,False)
+    pred_fitness, prey_fitness = sim.simulation(pred_indiv,prey_indiv,confusion,False,render=False)
     return pred_fitness, prey_fitness
 
 def pred_eval(pred_indiv,preys_population,confusion):
@@ -143,8 +143,8 @@ def cmaes(nb_gen=100, confusion=True, display=True):
         preys_population = es_preys.ask()
 
         pred_fitness, prey_fitness, survivorship, swarm_density, swarm_dispersion = sim.simulation(preds_population[0],preys_population[0],confusion,True,render=False)
-        return
-"""
+        exit()
+
         pred_eval_part=partial(pred_eval, preys_population=preys_population, confusion=confusion)
         prey_eval_part=partial(prey_eval, preds_population=preds_population, confusion=confusion)
 
@@ -159,13 +159,12 @@ def cmaes(nb_gen=100, confusion=True, display=True):
         pred = es_preds.ask(number=1)[0]
         prey = es_preys.ask(number=1)[0]
 
-        pred_fitness, prey_fitness, survivorship, swarm_density, swarm_dispersion = sim.simulation(pred,prey,confusion,True)
+        pred_fitness, prey_fitness, survivorship, swarm_density, swarm_dispersion = sim.simulation(pred,prey,confusion,True,render=True)
         survivorships.append(survivorship)
         swarm_densitys.append(swarms_density)
         swarm_dispersions.append(swarm_dispersion)
 
     return survivorships, swarm_densitys, swarm_dispersions
-"""
 
 
 
