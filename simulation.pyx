@@ -2,6 +2,8 @@ import time
 import math
 import numpy as np
 import collections
+import matplotlib.pyplot as plt
+import copy
 
 
 import torch
@@ -103,9 +105,9 @@ class ENV():
 
         #pred
         self.confusion = confusion
-        self.pred_size = 11
+        self.pred_size = 15
         self.last_meal = 10
-        self.velocity_pred = 3
+        self.velocity_pred = 9
         self.rotation_pred = math.radians(6)
         self.num_sensor_pred = 12
         self.sensor_distance_pred = 200
@@ -117,7 +119,7 @@ class ENV():
 
         #prey
         self.prey_size = 7
-        self.velocity_prey = 1
+        self.velocity_prey = 3
         self.rotation_prey = 8
         self.num_sensor_prey = 24
         self.sensor_distance_prey = 100
@@ -129,12 +131,12 @@ class ENV():
         #env
         self.x_size= 512
         self.y_size= 512
-        self.env_map = np.zeros((self.x_size,self.y_size),dtype=np.intc)
+        self.map = np.zeros((self.x_size,self.y_size),dtype=np.intc)
 
 
 
     def ray_casting(self,target,position,distance,self_size,step_size,ray_direction):
-        real_pos = position
+        real_pos = copy.deepcopy(position)
         first_step = (self_size*np.cos(ray_direction),self_size*np.sin(ray_direction))
         real_pos[0] += first_step[0]
         real_pos[0] %= 512
@@ -143,7 +145,7 @@ class ENV():
         step = (step_size*np.cos(ray_direction),step_size*np.sin(ray_direction))
         for i in range(distance//step_size):
             int_pos = int(math.floor(real_pos[0])),int(math.floor(real_pos[1]))
-            if self.env_map[int_pos[0],int_pos[1]]==target:
+            if self.map[int_pos[0],int_pos[1]]==target:
                 return 1
             real_pos[0] += step[0]
             real_pos[0] %= 512
@@ -171,17 +173,23 @@ class ENV():
         observation = np.zeros(24)
         for sensor in range(12): #nb sensors
             ray_direction = (self.direction_preys[idx] + math.pi/2 - sensor*math.radians(15)) % (2*math.pi)
-            for ray in range(2): #nb rays
+            for ray in range(8): #nb rays
+                ray_direction += math.radians(2)
+                ray_direction %= 2*math.pi
+                observation[sensor] = self.ray_casting(1,self.position_preys[idx],
+                        self.sensor_distance_prey,self.prey_size,
+                        self.prey_size,ray_direction)
+                if observation[sensor] == 1:
+                    break
+        for sensor in range(12,24): #nb sensors
+            ray_direction = (self.direction_preys[idx] + math.pi/2 - (sensor-12)*math.radians(15)) % (2*math.pi)
+            for ray in range(1): #nb rays
                 ray_direction += math.radians(7)
                 ray_direction %= 2*math.pi
-                detection = self.ray_casting(1,self.position_preys[idx],
+                observation[sensor] = self.ray_casting(1,self.position_preys[idx],
                         self.sensor_distance_prey,self.prey_size,
                         self.pred_size,ray_direction)
-                if  detection == 1:
-                    observation[sensor] = 1
-                if  detection == 2:
-                    observation[12+sensor] = 1
-                if observation[sensor]==1 and observation[12+sensor]==1:
+                if observation[sensor] == 1:
                     break
         return list(observation)
 
@@ -282,31 +290,36 @@ class ENV():
             self.position_preys[i,0] %= self.x_size
             self.position_preys[i,1] %= self.y_size
 
-        self.reset_env_map()
-
+        self.update_map()
+        
         self.nput_pred = self.pred_observation()
 
         self.eat_prey()
 
         self.input_preys = self.preys_observations()
-        
+
         return self.input_pred, self.input_preys, self.num_preys
 
 
-    def reset_env_map(self):
-        self.env_map = np.zeros((self.x_size,self.y_size),dtype=np.intc)
+    def update_map(self):
+        self.map = np.zeros((self.x_size,self.y_size),dtype=np.intc)
         prey_size = self.prey_size//2
         pred_size = self.pred_size//2
         for x,y in self.position_preys:
-            self.env_map[x-prey_size:x+prey_size,y-prey_size:y+prey_size]=1
+            for xi in range(x-prey_size, x+prey_size):
+                for yi in range(y-prey_size, y+prey_size):
+                    self.map[xi%512,yi%512] = 1
+
         x,y = self.position_pred
-        self.env_map[x-pred_size:x+pred_size,y-pred_size:y+pred_size]=2
+        for xi in range(x-pred_size, x+pred_size):
+            for yi in range(y-pred_size, y+pred_size):
+                self.map[xi%512,yi%512] = 2
 
 
     def eat_prey(self):
         self.last_meal +=1
         for i,position_prey in enumerate(self.position_preys):
-            if dist(position_prey,self.position_pred)<10 and self.last_meal>10:
+            if dist(position_prey,self.position_pred)<self.pred_size+self.prey_size and self.last_meal>10:
                 if not self.confusion:
                     eat = True
                 else:
@@ -315,8 +328,8 @@ class ENV():
                     eat = rand <= prob
                 if eat:
                     print("eat {}".format(i))
-                    self.position_preys = np.delete(self.position_preys,[i],1)
-                    self.direction_preys = np.delete(self.direction_preys,[i],1)
+                    self.position_preys = np.delete(self.position_preys,[i],0)
+                    self.direction_preys = np.delete(self.direction_preys,[i],0)
                     self.num_preys -= 1
                     self.last_meal = 0
                     break
@@ -334,7 +347,7 @@ class ENV():
 
 
 
-def simulation(pred_indiv,prey_indiv,confusion,log):
+def simulation(pred_indiv,prey_indiv,confusion,log,render=True):
 
     t1 = time.time()
 
@@ -360,7 +373,12 @@ def simulation(pred_indiv,prey_indiv,confusion,log):
     input_pred = torch.Tensor(env.pred_observation())
     input_preys = torch.Tensor(env.preys_observations())
 
-    for step in range(2000):
+    if render:
+        plt.imshow(env.map)
+        plt.pause(0.01)
+
+    for step in range(20):
+        
         with torch.set_grad_enabled(False):
             pred_output = pred_nn.forward(input_pred)
             preys_outputs = prey_nn.forward(input_preys)
@@ -368,6 +386,9 @@ def simulation(pred_indiv,prey_indiv,confusion,log):
         preys_actions = np.argmax(preys_outputs,axis=1)
 
         input_pred, input_preys, survivorship  = env.step(pred_action, preys_actions)
+
+        if survivorship == 0:
+            break
 
         if log:
             swarm_density = env.compute_swarm_density()
@@ -381,6 +402,13 @@ def simulation(pred_indiv,prey_indiv,confusion,log):
         fitness_pred += 200 - survivorship
         fitness_prey += survivorship
         
+        if render:
+            plt.imshow(env.map)
+            plt.pause(0.01)
+        
+    if render:
+        plt.show()
+
     t2 = time.time()
     print("time step = {}".format(t2-t1))
 
