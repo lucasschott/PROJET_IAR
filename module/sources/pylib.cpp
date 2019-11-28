@@ -1,7 +1,14 @@
 #include <boost/python.hpp>
 #include "Simulation.hpp"
+#include <torch/torch.h>
 
 using namespace boost::python;
+
+
+void test()
+{
+  torch::Tensor tensor = torch::rand({2, 3});
+}
 
 BOOST_PYTHON_MODULE(pylib)
 {

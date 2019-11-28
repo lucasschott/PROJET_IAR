@@ -1,4 +1,10 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+project(pylib)
+
+set(Torch_DIR libtorch/share/cmake/Torch)
+
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 FIND_PACKAGE(PythonInterp)
 
@@ -33,12 +39,14 @@ message(STATUS "PYTHON_EXECUTABLE = ${PYTHON_EXECUTABLE}")
 message(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
 message(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
 
+
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} "./includes")
 file(GLOB source_files "sources/*.cpp")
 
 add_library(pylib SHARED ${source_files})
-target_link_libraries(pylib ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
-add_dependencies(pylib Boost)
+set_property(TARGET pylib PROPERTY CXX_STANDARD 11)
+target_link_libraries(pylib ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${TORCH_LIBRARIES})
+# add_dependencies(pylib Boost)
 
 # Ajuste le nom de la bibliothèque pour coller à ce qu'attend Python
 set_target_properties(pylib PROPERTIES SUFFIX .so)
