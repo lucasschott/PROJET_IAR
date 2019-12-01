@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(pylib)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 set(Torch_DIR libtorch/share/cmake/Torch)
 
 find_package(Torch REQUIRED)
@@ -48,9 +56,6 @@ set_property(TARGET pylib PROPERTY CXX_STANDARD 11)
 target_link_libraries(pylib ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${TORCH_LIBRARIES})
 # add_dependencies(pylib Boost)
 
-# Ajuste le nom de la bibliothèque pour coller à ce qu'attend Python
 set_target_properties(pylib PROPERTIES SUFFIX .so)
 set_target_properties(pylib PROPERTIES PREFIX "")
-
-
 

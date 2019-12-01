@@ -235,7 +235,7 @@ class ENV():
                 observation_pred[i] = 1
 
         return observation_prey + observation_pred
-    
+
     def preys_observations(self):
         input_preys = []
         for i in range(self.num_preys):
@@ -289,7 +289,7 @@ class ENV():
             self.position_preys[i,1] %= self.y_size
 
         self.update_map()
-        
+
         self.nput_pred = self.pred_observation()
 
         self.eat_prey()

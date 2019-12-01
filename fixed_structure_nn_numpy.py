@@ -23,7 +23,6 @@ def gen_simplemlp(n_in, n_out, n_hidden_layers=2, n_neurons_per_hidden=5):
     o = Dense(n_out, activation='tanh')(x)
     m = Model(inputs=i, outputs=o)
     return m
-    
 
 class SimpleNeuralControllerNumpy():
     def __init__(self, n_in, n_out, n_hidden_layers=2, n_neurons_per_hidden=5, params=None):
