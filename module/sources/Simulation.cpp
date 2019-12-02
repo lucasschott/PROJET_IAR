@@ -73,14 +73,14 @@ bp::list Simulation::run(int timesteps)
 {
 	std::vector<int> prey_actions;
 	std::vector<int> predator_actions;
-	std::vector<std::vector<double> > results;
 	std::vector<double> current_results;
 	double fitness_prey = 0;
 	double fitness_pred = 0;
+    double density = 0;
+    double dispersion = 0;
+    int i = 0;
 
-	bp::list list;
-
-	for (int i = 0; i < timesteps; i++)
+	for (i = 0; i < timesteps && this->preys.size() > 0; i++)
 	{
 		this->compute_prey_observations();
 		prey_actions = this->forward_prey();
@@ -92,21 +92,27 @@ bp::list Simulation::run(int timesteps)
 		this->apply_prey_actions(prey_actions);
 		this->apply_predator_actions(predator_actions);
 		this->eat_prey();
-
 		this->clear_population_observations();
+       
 		current_results = this->compute_swarm_density_and_dispersion();
 		fitness_prey += this->preys.size();
-		fitness_pred += this->num_preys + this->preys.size();
-		current_results.push_back(fitness_prey);
-		current_results.push_back(fitness_pred);
-		results.push_back(current_results);
+		fitness_pred += this->num_preys - this->preys.size();
+
+        density += current_results[0];
+        dispersion += current_results[1];
+
+        if (this->preys.size() == 0)
+            fitness_pred += this->num_preys * (timesteps - i);
 	}
 
-	for (std::vector<std::vector<double> >::iterator iter = results.begin();
-	     iter != results.end(); iter++)
-		list.append(toPythonList(*iter));
+    std::vector<double> results;
+    results.push_back(density);
+    results.push_back(dispersion);
+    results.push_back(fitness_prey);
+    results.push_back(fitness_pred);
 
-	return list;
+	return toPythonList(results);
+
 }
 
 void Simulation::compute_prey_observations()
