@@ -76,9 +76,9 @@ bp::list Simulation::run(int timesteps)
 	std::vector<double> current_results;
 	double fitness_prey = 0;
 	double fitness_pred = 0;
-    double density = 0;
-    double dispersion = 0;
-    int i = 0;
+	double density = 0;
+	double dispersion = 0;
+	int i = 0;
 
 	for (i = 0; i < timesteps && this->preys.size() > 0; i++)
 	{
@@ -93,23 +93,24 @@ bp::list Simulation::run(int timesteps)
 		this->apply_predator_actions(predator_actions);
 		this->eat_prey();
 		this->clear_population_observations();
-       
+
 		current_results = this->compute_swarm_density_and_dispersion();
 		fitness_prey += this->preys.size();
 		fitness_pred += this->num_preys - this->preys.size();
 
-        density += current_results[0];
-        dispersion += current_results[1];
+		density += current_results[0];
+		dispersion += current_results[1];
 
-        if (this->preys.size() == 0)
-            fitness_pred += this->num_preys * (timesteps - i);
+		if (this->preys.size() == 0)
+		    fitness_pred += this->num_preys * (timesteps - i);
 	}
 
-    std::vector<double> results;
-    results.push_back(density);
-    results.push_back(dispersion);
-    results.push_back(fitness_prey);
-    results.push_back(fitness_pred);
+	std::vector<double> results;
+	results.push_back(density);
+	results.push_back(dispersion);
+	results.push_back(fitness_prey);
+	results.push_back(fitness_pred);
+	results.push_back(this->preys.size());
 
 	return toPythonList(results);
 
