@@ -19,6 +19,7 @@ env_y = 512
 eat_distance = 15
 confusion = False
 timesteps = 2000
+POP_SIZE = 10
 
 pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
 prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
@@ -46,46 +47,34 @@ def run_simulation(s, iter):
     print(iter, " simulation ran in : finished in {:1.2f} s [{:1.0f} fps] [{:3.2f} s per simulation]".format(t2 - t1, (iter * timesteps) / (t2 - t1), per_simulation))
     return results
 
+"""
+    Simulation object
+    run returns an array : [0] density
+                           [1] dispersion
+                           [2] prey_fitness
+                           [3] pred_fitness
+                           [4] survivorship
+"""
+
+DENSITY = 0
+DISPERSION = 1
+PREY_FITNESS = 2
+PRED_FITNESS = 3
+SURVIVORSHIP = 4
+
 s = pylib.Simulation(input, output, num_preys, num_predators, env_x, env_y, eat_distance, confusion)
+
 
 #run_simulation(s, 1)
 #exit()
 
+def save(data, path):
+    np.save(path, data)
+
 def smooth(x,window_len=11,window='hanning'):
-    """
-    smooth the data using a window with requested size.
-    This method is based on the convolution of a scaled window with the signal.
-    The signal is prepared by introducing reflected copies of the signal
-    (with the window size) in both ends so that transient parts are minimized
-    in the begining and end part of the output signal.
-
-    input:
-        x: the input signal
-        window_len: the dimension of the smoothing window; should be an odd integer
-        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-            flat window will produce a moving average smoothing.
-
-    output:
-        the smoothed signal
-
-    example:
-
-    t=linspace(-2,2,0.1)
-    x=sin(t)+randn(len(t))*0.1
-    y=smooth(x)
-
-    see also:
-
-    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-    scipy.signal.lfilter
-
-    TODO: the window parameter could be the window itself if an array instead of a string
-    NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
-    """
 
     if window_len<3:
         return x
-
 
     s=np.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
     #print(len(s))
@@ -97,32 +86,30 @@ def smooth(x,window_len=11,window='hanning'):
     y=np.convolve(w/w.sum(),s,mode='valid')
     return y
 
-def eval_(pred_genotype,prey_genotype,confusion):
-
+def __eval__(pred_genotype,prey_genotype,confusion):
     s_ = pylib.Simulation(input, output, num_preys, num_predators, env_x, env_y, eat_distance, confusion)
     s_.reset_population()
     s_.load_prey_genotype(list(prey_genotype))
     s_.load_predator_genotype(list(pred_genotype))
     results = s_.run(timesteps)
 
-    prey_fitness = results[2]
-    pred_fitness = results[3]
+    """ Sign switch on fitnesses is necessary for CMAES """
+    results[PRED_FITNESS] = -1 * results[PRED_FITNESS]
+    results[PREY_FITNESS] = -1 * results[PREY_FITNESS]
 
-    return -pred_fitness, -prey_fitness
+    return results
 
 def pred_eval(pred_indiv,preys_population,confusion):
     sum_pred_fitnesses = 0
     for prey_indiv in preys_population:
-        pred_fitness, prey_fitness = eval_(pred_indiv,prey_indiv,confusion)
-        sum_pred_fitnesses += pred_fitness
+        sum_pred_fitnesses += __eval__(pred_indiv,prey_indiv,confusion)[PRED_FITNESS]
     return sum_pred_fitnesses / len(preys_population)
 
 
 def prey_eval(preds_population,prey_indiv,confusion):
     sum_prey_fitnesses = 0
     for pred_indiv in preds_population:
-        pred_fitness, prey_fitness = eval_(pred_indiv,prey_indiv,confusion)
-        sum_prey_fitnesses += prey_fitness
+        sum_prey_fitnesses += __eval__(pred_indiv,prey_indiv,confusion)[PREY_FITNESS]
     return sum_prey_fitnesses / len(preds_population)
 
 def cmaes(nb_gen=15, confusion=True, display=True):
@@ -132,12 +119,13 @@ def cmaes(nb_gen=15, confusion=True, display=True):
     survivorships = []
     swarm_densitys = []
     swarm_dispersions = []
+    best_pred = None
 
     pool = mp.Pool(mp.cpu_count())
 
     for i in range(nb_gen):
         preds_population = es_preds.ask()
-        prey_genotype = np.random.rand(1, PREY_NETWORK_SIZE)
+        prey_genotype = np.random.rand(20, PREY_NETWORK_SIZE)
 
         pred_eval_part=partial(pred_eval, preys_population=prey_genotype, confusion=confusion)
         preds_fitnesses = pool.map(pred_eval_part, [pred_indiv for pred_indiv in preds_population])
@@ -146,35 +134,30 @@ def cmaes(nb_gen=15, confusion=True, display=True):
 
         es_preds.tell(preds_population, preds_fitnesses)
 
-        pred = preds_population[np.argmin(preds_fitnesses)]
-
         results = []
+        best_pred = preds_population[np.argmin(preds_fitnesses)]
 
+        """
         for prey in prey_genotype:
-            s.reset_population()
-            s.load_prey_genotype(list(prey))
-            s.load_predator_genotype(list(pred))
-            results.append(s.run(timesteps))
+            results.append(__eval__(best_pred, prey, confusion))
 
         results = np.mean(results, axis=0)
 
-        density = results[0]
-        dispersion = results[1]
-        survivorship = results[4]
+        density = results[DENSITY]
+        dispersion = results[DISPERSION]
+        survivorship = results[SURVIVORSHIP]
 
         survivorships.append(survivorship)
-
-        #print("EVAL ON BEST : {} remaining preys".format(survivorships[-1]))
-
         swarm_densitys.append(density)
         swarm_dispersions.append(dispersion)
+        """
 
-    return survivorships, swarm_densitys, swarm_dispersions
+    return survivorships, swarm_densitys, swarm_dispersions, best_pred
 
 if __name__ == "__main__":
 
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions = cmaes(nb_gen=250,confusion=confusion)
+    survivorships, swarm_densitys, swarm_dispersions, best_pred = cmaes(nb_gen=100,confusion=confusion)
     t2 = time.time()
 
     print("EVOLUTION LEARNING FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
@@ -185,3 +168,6 @@ if __name__ == "__main__":
     plt.plot(np.arange(len(smoothed)),smoothed,label="confusion")
     plt.legend()
     plt.show()
+
+    save(best_pred, "best_pred")
+
