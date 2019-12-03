@@ -51,6 +51,52 @@ s = pylib.Simulation(input, output, num_preys, num_predators, env_x, env_y, eat_
 #run_simulation(s, 1)
 #exit()
 
+def smooth(x,window_len=11,window='hanning'):
+    """
+    smooth the data using a window with requested size.
+    This method is based on the convolution of a scaled window with the signal.
+    The signal is prepared by introducing reflected copies of the signal
+    (with the window size) in both ends so that transient parts are minimized
+    in the begining and end part of the output signal.
+
+    input:
+        x: the input signal
+        window_len: the dimension of the smoothing window; should be an odd integer
+        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+            flat window will produce a moving average smoothing.
+
+    output:
+        the smoothed signal
+
+    example:
+
+    t=linspace(-2,2,0.1)
+    x=sin(t)+randn(len(t))*0.1
+    y=smooth(x)
+
+    see also:
+
+    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
+    scipy.signal.lfilter
+
+    TODO: the window parameter could be the window itself if an array instead of a string
+    NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
+    """
+
+    if window_len<3:
+        return x
+
+
+    s=np.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
+    #print(len(s))
+    if window == 'flat': #moving average
+        w=np.ones(window_len,'d')
+    else:
+        w=eval('np.'+window+'(window_len)')
+
+    y=np.convolve(w/w.sum(),s,mode='valid')
+    return y
+
 def eval_(pred_genotype,prey_genotype,confusion):
 
     s_ = pylib.Simulation(input, output, num_preys, num_predators, env_x, env_y, eat_distance, confusion)
@@ -91,7 +137,7 @@ def cmaes(nb_gen=15, confusion=True, display=True):
 
     for i in range(nb_gen):
         preds_population = es_preds.ask()
-        prey_genotype = np.random.rand(3, PREY_NETWORK_SIZE)
+        prey_genotype = np.random.rand(1, PREY_NETWORK_SIZE)
 
         pred_eval_part=partial(pred_eval, preys_population=prey_genotype, confusion=confusion)
         preds_fitnesses = pool.map(pred_eval_part, [pred_indiv for pred_indiv in preds_population])
@@ -118,7 +164,7 @@ def cmaes(nb_gen=15, confusion=True, display=True):
 
         survivorships.append(survivorship)
 
-        print("EVAL ON BEST : {} remaining preys".format(survivorships[-1]))
+        #print("EVAL ON BEST : {} remaining preys".format(survivorships[-1]))
 
         swarm_densitys.append(density)
         swarm_dispersions.append(dispersion)
@@ -128,13 +174,14 @@ def cmaes(nb_gen=15, confusion=True, display=True):
 if __name__ == "__main__":
 
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions = cmaes(nb_gen=50,confusion=confusion)
+    survivorships, swarm_densitys, swarm_dispersions = cmaes(nb_gen=250,confusion=confusion)
     t2 = time.time()
 
     print("EVOLUTION LEARNING FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
     plt.figure()
     plt.title("survivorship")
-    plt.plot(np.arange(len(survivorships)),survivorships,label="confusion")
+    smoothed = smooth(survivorships)
+    plt.plot(np.arange(len(smoothed)),smoothed,label="confusion")
     plt.legend()
     plt.show()
