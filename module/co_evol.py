@@ -61,8 +61,6 @@ PREY_FITNESS = 2
 PRED_FITNESS = 3
 SURVIVORSHIP = 4
 
-s = pylib.Simulation(input, output, num_preys, num_predators, env_x, env_y, eat_distance, confusion)
-
 def save(data, path):
     np.save(path, data)
 
@@ -180,11 +178,11 @@ if __name__ == "__main__":
     survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=600, popsize=10, confusion=True)
     t2 = time.time()
 
-    save(survivorships, "survivorships-no-confusion")
-    save(swarm_densitys, "swarm-densitys-no-confusion")
-    save(swarm_dispersions, "swarm-dispersions-no-confusion")
-    save(best_pred, "best_pred_no_confusion")
-    save(best_prey, "best_prey_no_confusion")
+    save(survivorships, "survivorships-confusion")
+    save(swarm_densitys, "swarm-densitys-confusion")
+    save(swarm_dispersions, "swarm-dispersions-confusion")
+    save(best_pred, "best_pred_confusion")
+    save(best_prey, "best_prey_confusion")
 
     print("EVOLUTION LEARNING WITH CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
