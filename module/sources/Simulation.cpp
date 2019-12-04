@@ -69,10 +69,26 @@ void Simulation::clear_population()
 	this->predators.clear();
 }
 
-bp::list Simulation::run(int timesteps)
+void Simulation::step()
 {
 	std::vector<int> prey_actions;
 	std::vector<int> predator_actions;
+
+	this->compute_prey_observations();
+	prey_actions = this->forward_prey();
+
+	this->compute_predator_observations();
+	predator_actions = this->forward_predator();
+
+
+	this->apply_prey_actions(prey_actions);
+	this->apply_predator_actions(predator_actions);
+	this->eat_prey();
+	this->clear_population_observations();
+}
+
+bp::list Simulation::run(int timesteps)
+{
 	std::vector<double> current_results;
 	double fitness_prey = 0;
 	double fitness_pred = 0;
@@ -82,18 +98,7 @@ bp::list Simulation::run(int timesteps)
 
 	for (i = 0; i < timesteps && this->preys.size() > 0; i++)
 	{
-		this->compute_prey_observations();
-		prey_actions = this->forward_prey();
-
-		this->compute_predator_observations();
-		predator_actions = this->forward_predator();
-
-
-		this->apply_prey_actions(prey_actions);
-		this->apply_predator_actions(predator_actions);
-		this->eat_prey();
-		this->clear_population_observations();
-
+		this->step();
 		current_results = this->compute_swarm_density_and_dispersion();
 		fitness_prey += this->preys.size();
 		fitness_pred += this->num_preys - this->preys.size();
@@ -205,11 +210,12 @@ bp::list Simulation::get_individuals_pos(std::vector<Individual> vector)
 
 	for (iter = vector.begin(); iter != vector.end(); ++iter)
 	{
-		std::vector<int> ind_pos;
+		std::vector<double> ind_pos;
 
 		Individual ind = *iter;
 		ind_pos.push_back(ind.get_pos_x());
 		ind_pos.push_back(ind.get_pos_y());
+		ind_pos.push_back(ind.get_direction());
 
 		list.append(toPythonList(ind_pos));
 	}

@@ -74,6 +74,11 @@ double Individual::get_pos_y()
 	return this->pos_y;
 }
 
+double Individual::get_direction()
+{
+	return this->direction;
+}
+
 void Individual::set_pos_x(int new_pos_x)
 {
 	this->pos_x = new_pos_x;
@@ -82,6 +87,11 @@ void Individual::set_pos_x(int new_pos_x)
 void Individual::set_pos_y(int new_pos_y)
 {
 	this->pos_y = new_pos_y;
+}
+
+void Individual::set_direction(double new_direction)
+{
+	this->direction = new_direction;
 }
 
 void Individual::clear_observations()

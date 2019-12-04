@@ -32,6 +32,7 @@ public:
     void load_prey_genotype(bp::list genotype);
     void load_predator_genotype(bp::list genotype);
 
+    void step();
     bp::list run(int timesteps);
     void compute_prey_observations();
     void compute_predator_observations();

@@ -18,11 +18,13 @@ public:
 
 	double get_pos_x();
 	double get_pos_y();
+	double get_direction();
 	double get_density();
 	double get_nearest();
 
 	void set_pos_x(int new_pos_x);
 	void set_pos_y(int new_pos_y);
+	void set_direction(double new_direction);
 	void clear_observations();
 	std::vector<int> get_observations();
 
