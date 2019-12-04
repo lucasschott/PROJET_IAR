@@ -361,6 +361,10 @@ void Simulation::eat_prey()
 		for (iter_prey = this->preys.begin(); iter_prey != this->preys.end();)
 		{
 
+
+			if ((*iter_pred).get_last_meal() < 10)
+				break;
+
 			if ((*iter_pred).get_distance_to(*iter_prey) <
 			    this->eat_distance)
 			{

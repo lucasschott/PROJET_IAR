@@ -125,7 +125,7 @@ def cmaes(nb_gen=15, confusion=True, display=True):
 
     for i in range(nb_gen):
         preds_population = es_preds.ask()
-        prey_genotype = np.random.rand(20, PREY_NETWORK_SIZE)
+        prey_genotype = np.random.rand(1, PREY_NETWORK_SIZE)
 
         pred_eval_part=partial(pred_eval, preys_population=prey_genotype, confusion=confusion)
         preds_fitnesses = pool.map(pred_eval_part, [pred_indiv for pred_indiv in preds_population])
@@ -155,7 +155,7 @@ def cmaes(nb_gen=15, confusion=True, display=True):
 if __name__ == "__main__":
 
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions, best_pred = cmaes(nb_gen=100,confusion=confusion)
+    survivorships, swarm_densitys, swarm_dispersions, best_pred = cmaes(nb_gen=20,confusion=confusion)
     t2 = time.time()
 
     print("EVOLUTION LEARNING FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
