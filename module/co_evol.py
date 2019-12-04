@@ -145,12 +145,15 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
         es_preds.tell(preds_population, preds_fitnesses)
         es_preys.tell(preys_population, preys_fitnesses)
 
-        best_pred = np.argmin(preds_fitnesses)
-        best_prey = np.argmin(preys_fitnesses)
+        best_pred_idx = np.argmin(preds_fitnesses)
+        best_prey_idx = np.argmin(preys_fitnesses)
 
-        density = preys_results[best_prey][DENSITY]
-        dispersion = preys_results[best_prey][DISPERSION]
-        survivorship = preys_results[best_prey][SURVIVORSHIP]
+        best_pred = preds_population[best_pred_idx]
+        best_prey = preys_population[best_prey_idx]
+
+        density = preys_results[best_prey_idx][DENSITY]
+        dispersion = preys_results[best_prey_idx][DISPERSION]
+        survivorship = preys_results[best_prey_idx][SURVIVORSHIP]
 
         survivorships.append(survivorship)
         swarm_densitys.append(density)
