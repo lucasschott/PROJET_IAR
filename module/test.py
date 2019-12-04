@@ -137,7 +137,6 @@ def cmaes(nb_gen=15, confusion=True, display=True):
         results = []
         best_pred = preds_population[np.argmin(preds_fitnesses)]
 
-        """
         for prey in prey_genotype:
             results.append(__eval__(best_pred, prey, confusion))
 
@@ -150,7 +149,6 @@ def cmaes(nb_gen=15, confusion=True, display=True):
         survivorships.append(survivorship)
         swarm_densitys.append(density)
         swarm_dispersions.append(dispersion)
-        """
 
     return survivorships, swarm_densitys, swarm_dispersions, best_pred
 
