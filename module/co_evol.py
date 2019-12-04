@@ -17,7 +17,6 @@ num_predators = 1
 env_x = 512
 env_y = 512
 eat_distance = 15
-confusion = False
 timesteps = 2000
 POP_SIZE = 10
 
@@ -151,9 +150,11 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
         best_pred = preds_population[best_pred_idx]
         best_prey = preys_population[best_prey_idx]
 
-        density = preys_results[best_prey_idx][DENSITY]
-        dispersion = preys_results[best_prey_idx][DISPERSION]
-        survivorship = preys_results[best_prey_idx][SURVIVORSHIP]
+        gen_results = np.mean(preds_results, axis=1)
+
+        density = gen_results[DENSITY]
+        dispersion = gen_results[DISPERSION]
+        survivorship = gen_results[SURVIVORSHIP]
 
         survivorships.append(survivorship)
         swarm_densitys.append(density)
@@ -164,18 +165,26 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
 if __name__ == "__main__":
 
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=100, popsize=10, confusion=confusion)
+    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=600, popsize=10, confusion=False)
     t2 = time.time()
 
-    print("EVOLUTION LEARNING FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
+    save(survivorships, "survivorships-no-confusion")
+    save(swarm_densitys, "swarm-densitys-no-confusion")
+    save(swarm_dispersions, "swarm-dispersions-no-confusion")
+    save(best_pred, "best_pred_no_confusion")
+    save(best_prey, "best_prey_no_confusion")
 
-    plt.figure()
-    plt.title("survivorship")
-    smoothed = smooth(survivorships)
-    plt.plot(np.arange(len(smoothed)),smoothed,label="confusion")
-    plt.legend()
-    plt.savefig('co_evol.png')
+    print("EVOLUTION LEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
-    save(best_pred, "best_pred")
-    save(best_prey, "best_prey")
+    t1 = time.time()
+    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=600, popsize=10, confusion=True)
+    t2 = time.time()
+
+    save(survivorships, "survivorships-no-confusion")
+    save(swarm_densitys, "swarm-densitys-no-confusion")
+    save(swarm_dispersions, "swarm-dispersions-no-confusion")
+    save(best_pred, "best_pred_no_confusion")
+    save(best_prey, "best_prey_no_confusion")
+
+    print("EVOLUTION LEARNING WITH CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
