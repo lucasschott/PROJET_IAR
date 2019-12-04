@@ -131,11 +131,12 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
         pred_eval_part=partial(pred_eval, preys_population=preys_population, confusion=confusion)
         all_fitnesses = pool.map(pred_eval_part, [pred_indiv for pred_indiv in preds_population])
 
-        preds_results = np.mean(all_fitnesses, axis=0)
-        preys_results = np.mean(all_fitnesses, axis=1)
+        all_fitnesses = np.array(all_fitnesses)
+        preds_results = np.mean(all_fitnesses, axis=1)
+        preys_results = np.mean(all_fitnesses, axis=0)
 
-        preds_fitnesses = preds_results[:][PRED_FITNESS]
-        preys_fitnesses = preys_results[:][PREY_FITNESS]
+        preds_fitnesses = preds_results[:, PRED_FITNESS]
+        preys_fitnesses = preys_results[:, PREY_FITNESS]
 
         print("GENERATION {}".format(i))
         print("PREDATORS :  BEST = [{:1.2f}] AVERAGE = [{:1.2f}] WORST = [{:1.2f}]".format(-min(preds_fitnesses), -np.mean(preds_fitnesses), -max(preds_fitnesses)))
@@ -160,7 +161,7 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
 if __name__ == "__main__":
 
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=100, popsize=5, confusion=confusion)
+    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=100, popsize=10, confusion=confusion)
     t2 = time.time()
 
     print("EVOLUTION LEARNING FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
