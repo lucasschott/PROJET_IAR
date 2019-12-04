@@ -165,7 +165,7 @@ if __name__ == "__main__":
     smoothed = smooth(survivorships)
     plt.plot(np.arange(len(smoothed)),smoothed,label="confusion")
     plt.legend()
-    plt.show()
+    plt.savefig('pred_evol.png')
 
     save(best_pred, "best_pred")
 
