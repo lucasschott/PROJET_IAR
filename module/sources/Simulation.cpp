@@ -2,7 +2,6 @@
 #include <iostream>
 #include <time.h>
 #include <random>
-#include "boost/python/numpy.hpp"
 #include "Simulation.hpp"
 #include <cmath>
 #include <numeric>

@@ -19,14 +19,14 @@ PREY_NETWORK_SIZE = (input*2)*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output
 conf_dir  = "result_confusion"
 no_conf_dir  = "result_no_confusion"
 
-num_preys = 20
+num_preys = 50
 num_predators = 1
 env_x = 512
 env_y = 512
 eat_distance = 9
 timesteps = 2000
-pop_size = 5
-nb_gen = 5
+pop_size = 10
+nb_gen = 600
 
 pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
 prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
@@ -107,12 +107,11 @@ def __eval__(pred_genotype,prey_genotype,confusion):
     mean axis 1 : PREYS FITNESSES
 """
 
-def pred_eval(pred_indiv,preys_population,confusion):
-    results = []
-    for prey_indiv in preys_population:
-        results.append(__eval__(pred_indiv,prey_indiv,confusion))
 
-    return results
+def eval(a,confusion):
+    pred_indiv,prey_indiv = a
+    return __eval__(pred_indiv,prey_indiv,confusion)
+
 
 
 def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
@@ -137,10 +136,15 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
         preds_population = es_preds.ask(popsize)
         preys_population = es_preys.ask(popsize)
 
-        pred_eval_part=partial(pred_eval, preys_population=preys_population, confusion=confusion)
-        all_fitnesses = pool.map(pred_eval_part, [pred_indiv for pred_indiv in preds_population])
+        eval_part=partial(eval, confusion=confusion)
+        args = []
+        for pred_indiv in preds_population:
+            for prey_indiv in preys_population:
+                args.append((pred_indiv,prey_indiv))
 
-        all_fitnesses = np.array(all_fitnesses)
+        all_fitnesses = pool.map(eval_part, args)
+
+        all_fitnesses = np.array(all_fitnesses).reshape(popsize,popsize,-1)
         preds_results = np.mean(all_fitnesses, axis=1)
         preys_results = np.mean(all_fitnesses, axis=0)
 
