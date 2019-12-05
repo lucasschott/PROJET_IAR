@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 import multiprocessing as mp
 from build import pylib
+import os
 
 
 input = 12
@@ -106,12 +107,11 @@ def __eval__(pred_genotype,prey_genotype,confusion):
     mean axis 1 : PREYS FITNESSES
 """
 
-def pred_eval(pred_indiv,preys_population,confusion):
-    results = []
-    for prey_indiv in preys_population:
-        results.append(__eval__(pred_indiv,prey_indiv,confusion))
 
-    return results
+def eval(a,confusion):
+    pred_indiv,prey_indiv = a
+    return __eval__(pred_indiv,prey_indiv,confusion)
+
 
 
 def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
@@ -123,8 +123,11 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
     es_preys = cma.CMAEvolutionStrategy(prey_genotype, 0.6, opts)
 
     survivorships = []
+    survivorships_errors = []
     swarm_densitys = []
+    swarm_densitys_errors = []
     swarm_dispersions = []
+    swarm_dispersions_errors = []
     best_pred = None
 
     pool = mp.Pool(mp.cpu_count())
@@ -133,10 +136,15 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
         preds_population = es_preds.ask(popsize)
         preys_population = es_preys.ask(popsize)
 
-        pred_eval_part=partial(pred_eval, preys_population=preys_population, confusion=confusion)
-        all_fitnesses = pool.map(pred_eval_part, [pred_indiv for pred_indiv in preds_population])
+        eval_part=partial(eval, confusion=confusion)
+        args = []
+        for pred_indiv in preds_population:
+            for prey_indiv in preys_population:
+                args.append((pred_indiv,prey_indiv))
 
-        all_fitnesses = np.array(all_fitnesses)
+        all_fitnesses = pool.map(eval_part, args)
+
+        all_fitnesses = np.array(all_fitnesses).reshape(popsize,popsize,-1)
         preds_results = np.mean(all_fitnesses, axis=1)
         preys_results = np.mean(all_fitnesses, axis=0)
 
@@ -157,40 +165,55 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
         best_prey = preys_population[best_prey_idx]
 
         gen_results = np.mean(preds_results, axis=0)
+        gen_errors = np.std(preds_results, axis=0)
 
         density = gen_results[DENSITY]
+        density_error = gen_errors[DENSITY]
         dispersion = gen_results[DISPERSION]
+        dispersion_error = gen_errors[DISPERSION]
         survivorship = gen_results[SURVIVORSHIP]
+        survivorship_error = gen_errors[SURVIVORSHIP]
 
         survivorships.append(survivorship)
+        survivorships_errors.append(survivorship_error)
         swarm_densitys.append(density)
+        swarm_densitys_errors.append(density_error)
         swarm_dispersions.append(dispersion)
+        swarm_dispersions_errors.append(dispersion_error)
 
-    return survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey
+    return survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey
 
 if __name__ == "__main__":
 
+    os.mkdir(no_conf_dir)
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=False)
+    survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=False)
     t2 = time.time()
 
     save(survivorships, no_conf_dir + "/survivorships-no-confusion")
-    save(swarm_densitys, no_conf_dir + "swarm-densitys-no-confusion")
-    save(swarm_dispersions, no_conf_dir + "swarm-dispersions-no-confusion")
-    save(best_pred, no_conf_dir + "best_pred_no_confusion")
-    save(best_prey, no_conf_dir + "best_prey_no_confusion")
+    save(survivorships_errors, no_conf_dir + "/survivorships-errors-no-confusion")
+    save(swarm_densitys, no_conf_dir + "/swarm-densitys-no-confusion")
+    save(swarm_densitys_errors, no_conf_dir + "/swarm-densitys-errors-no-confusion")
+    save(swarm_dispersions, no_conf_dir + "/swarm-dispersions-no-confusion")
+    save(swarm_dispersions_errors, no_conf_dir + "/swarm-dispersions-errors-no-confusion")
+    save(best_pred, no_conf_dir + "/best_pred_no_confusion")
+    save(best_prey, no_conf_dir + "/best_prey_no_confusion")
 
     print("EVOLUTION LEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
+    os.mkdir(conf_dir)
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=True)
+    survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=True)
     t2 = time.time()
 
-    save(survivorships, conf_dir + "survivorships-confusion")
-    save(swarm_densitys, conf_dir + "swarm-densitys-confusion")
-    save(swarm_dispersions, conf_dir + "swarm-dispersions-confusion")
-    save(best_pred, conf_dir + "best_pred_confusion")
-    save(best_prey, conf_dir + "best_prey_confusion")
+    save(survivorships, conf_dir + "/survivorships-confusion")
+    save(survivorships_errors, conf_dir + "/survivorships-errors-confusion")
+    save(swarm_densitys, conf_dir + "/swarm-densitys-confusion")
+    save(swarm_densitys_errors, conf_dir + "/swarm-densitys-errors-confusion")
+    save(swarm_dispersions, conf_dir + "/swarm-dispersions-confusion")
+    save(swarm_dispersions_errors, conf_dir + "/swarm-dispersions-errors-confusion")
+    save(best_pred, conf_dir + "/best_pred_confusion")
+    save(best_prey, conf_dir + "/best_prey_confusion")
 
     print("EVOLUTION LEARNING WITH CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
