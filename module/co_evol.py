@@ -16,8 +16,8 @@ LAYER = 12
 PRED_NETWORK_SIZE = input*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output+output
 PREY_NETWORK_SIZE = (input*2)*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output+output
 
-conf_dir  = "result_confusion/"
-no_conf_dir  = "result_no_confusion/"
+conf_dir  = "result_confusion"
+no_conf_dir  = "result_no_confusion"
 
 num_preys = 50
 num_predators = 1
