@@ -7,18 +7,22 @@ import matplotlib.pyplot as plt
 import multiprocessing as mp
 from build import pylib
 
-PRED_NETWORK_SIZE = 520
-PREY_NETWORK_SIZE = PRED_NETWORK_SIZE + 156
 
 input = 12
 output = 4
+
+LAYER = 12
+PRED_NETWORK_SIZE = input*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output+output
+PREY_NETWORK_SIZE = (input*2)*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output+output
+
 num_preys = 50
 num_predators = 1
 env_x = 512
 env_y = 512
-eat_distance = 15
+eat_distance = 9
 timesteps = 2000
-POP_SIZE = 10
+pop_size = 5
+nb_gen = 100
 
 pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
 prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
@@ -148,7 +152,7 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
         best_pred = preds_population[best_pred_idx]
         best_prey = preys_population[best_prey_idx]
 
-        gen_results = np.mean(preds_results, axis=1)
+        gen_results = np.mean(preds_results, axis=0)
 
         density = gen_results[DENSITY]
         dispersion = gen_results[DISPERSION]
@@ -163,7 +167,7 @@ def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
 if __name__ == "__main__":
 
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=600, popsize=10, confusion=False)
+    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=False)
     t2 = time.time()
 
     save(survivorships, "survivorships-no-confusion")
