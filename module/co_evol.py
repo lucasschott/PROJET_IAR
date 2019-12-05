@@ -15,6 +15,9 @@ LAYER = 12
 PRED_NETWORK_SIZE = input*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output+output
 PREY_NETWORK_SIZE = (input*2)*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output+output
 
+conf_dir  = "result_confusion"
+no_conf_dir  = "result_no_confusion"
+
 num_preys = 50
 num_predators = 1
 env_x = 512
@@ -110,6 +113,7 @@ def pred_eval(pred_indiv,preys_population,confusion):
 
     return results
 
+
 def cmaes(nb_gen=15, popsize=10, confusion=True, display=True):
 
     opts = cma.CMAOptions()
@@ -170,23 +174,23 @@ if __name__ == "__main__":
     survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=False)
     t2 = time.time()
 
-    save(survivorships, "survivorships-no-confusion")
-    save(swarm_densitys, "swarm-densitys-no-confusion")
-    save(swarm_dispersions, "swarm-dispersions-no-confusion")
-    save(best_pred, "best_pred_no_confusion")
-    save(best_prey, "best_prey_no_confusion")
+    save(survivorships, no_conf_dir + "/survivorships-no-confusion")
+    save(swarm_densitys, no_conf_dir + "swarm-densitys-no-confusion")
+    save(swarm_dispersions, no_conf_dir + "swarm-dispersions-no-confusion")
+    save(best_pred, no_conf_dir + "best_pred_no_confusion")
+    save(best_prey, no_conf_dir + "best_prey_no_confusion")
 
     print("EVOLUTION LEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=600, popsize=10, confusion=True)
+    survivorships, swarm_densitys, swarm_dispersions, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=True)
     t2 = time.time()
 
-    save(survivorships, "survivorships-confusion")
-    save(swarm_densitys, "swarm-densitys-confusion")
-    save(swarm_dispersions, "swarm-dispersions-confusion")
-    save(best_pred, "best_pred_confusion")
-    save(best_prey, "best_prey_confusion")
+    save(survivorships, conf_dir + "survivorships-confusion")
+    save(swarm_densitys, conf_dir + "swarm-densitys-confusion")
+    save(swarm_dispersions, conf_dir + "swarm-dispersions-confusion")
+    save(best_pred, conf_dir + "best_pred_confusion")
+    save(best_prey, conf_dir + "best_prey_confusion")
 
     print("EVOLUTION LEARNING WITH CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
