@@ -15,8 +15,8 @@ LAYER = 12
 PRED_NETWORK_SIZE = input*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output+output
 PREY_NETWORK_SIZE = (input*2)*LAYER+LAYER + 2*(LAYER*LAYER+LAYER) + LAYER*output+output
 
-conf_dir  = "result_confusion"
-no_conf_dir  = "result_no_confusion"
+conf_dir  = "result_confusion/"
+no_conf_dir  = "result_no_confusion/"
 
 num_preys = 50
 num_predators = 1
@@ -24,8 +24,8 @@ env_x = 512
 env_y = 512
 eat_distance = 9
 timesteps = 2000
-pop_size = 5
-nb_gen = 100
+pop_size = 10
+nb_gen = 600
 
 pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
 prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
