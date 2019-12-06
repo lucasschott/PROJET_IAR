@@ -110,8 +110,8 @@ bp::list Simulation::run(int timesteps)
 	}
 
 	std::vector<double> results;
-	results.push_back(density);
-	results.push_back(dispersion);
+	results.push_back(density / i);
+	results.push_back(dispersion / i);
 	results.push_back(fitness_prey);
 	results.push_back(fitness_pred);
 	results.push_back(this->preys.size());
@@ -180,6 +180,13 @@ std::vector<double> Simulation::compute_swarm_density_and_dispersion()
 	std::vector<double> results;
 	double density = 0;
 	double dispersion = 0;
+
+	if (this->preys.size() == 0)
+	{
+		results.push_back(0);
+		results.push_back(0);
+		return results;
+	}
 
 	for (std::vector<Individual>::iterator current = preys.begin() ;
 		current != this->preys.end(); current++)

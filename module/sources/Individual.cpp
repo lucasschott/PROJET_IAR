@@ -1,6 +1,7 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
+#include <cassert>
 #include "Individual.hpp"
 
 unsigned int generate_new_id()
@@ -106,7 +107,8 @@ void Individual::clear_density()
 
 void Individual::clear_nearest()
 {
-	this->nearest = std::numeric_limits<double>::infinity();
+	//this->nearest = std::numeric_limits<double>::infinity();
+	this->nearest = 1000;
 }
 
 void Individual::compute_normal_view_point(double env_x_max, double env_y_max,
@@ -163,8 +165,11 @@ void Individual::observe(Individual &other)
 	double angle;
 	int bin;
 
-	if (distance < this->nearest)
+	if (other.type == PREY && distance < this->nearest)
 		this->nearest = distance;
+
+	if (other.type == PREY && distance < 30)
+		this->density += 1;
 
 	if (distance > this->view_distance)
 		return;
@@ -180,8 +185,6 @@ void Individual::observe(Individual &other)
 		if (other.type == PREDATOR)
 			bin = bin + NB_BINS;
 
-		else if (distance < 30)
-			this->density += 1;
 
 		this->observations[bin] = 1;
 	}
