@@ -49,8 +49,9 @@ env_y = 512
 eat_distance = 9
 timesteps = 2000
 pop_size = 10
-nb_gen_pred = 30 #200
-nb_gen = 100 #1200
+nb_gen_pred = 10 #200
+nb_gen = 10 #1200
+save_freq = 1 #600
 
 
 
@@ -111,7 +112,7 @@ def eval(indivs,confusion):
 
 ########## predator evolution ##########
 
-def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True, display=True):
+def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
     
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
@@ -149,7 +150,7 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True, display=Tru
 
 ########## co evolution ##########
 
-def co_evol(pred_genotype, prey_genotype, nb_gen=1200, popsize=20, confusion=True, display=True):
+def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20, confusion=True):
 
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
@@ -199,7 +200,7 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, popsize=20, confusion=Tru
         best_pred = preds_population[best_pred_idx]
         best_prey = preys_population[best_prey_idx]
 
-        if i%10==0 :
+        if i%save_freq==0 :
             if confusion:
                 np.save(conf_dir + "/best_pred_{}".format(i), best_pred)
                 np.save(conf_dir + "/best_prey_{}".format(i), best_prey)
@@ -232,20 +233,27 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, popsize=20, confusion=Tru
 
 if __name__ == "__main__":
 
+
+
+    print("\nPRE-EVOL PRED\n")
+
     pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
+    t1 = time.time()
+    pred_genotype = pred_evol(pred_genotype, nb_gen=nb_gen_pred, popsize=pop_size, confusion=False)
+    t2= time.time()
 
-    print("\npre-evol Pred\n")
+    print("PRE EVOLUTION PREDATOR WITH RANDOM PREYS\nLEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format(
+        (t2 - t1) // 60, (t2 - t1) % 60))
 
-    pred_genotype = pred_evol(pred_genotype, nb_gen=nb_gen_pred, popsize=pop_size, confusion=False, display=False)
+
+
+    print("\nCO-EVOL NO CONFUSION\n")
 
     prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
-
-    print("\nco-evol no confusion\n")
-
     t1 = time.time()
     (survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors,
     swarm_dispersions, swarm_dispersions_errors, best_pred,
-    best_prey) = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, popsize=pop_size, confusion=False)
+    best_prey) = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=False)
     t2 = time.time()
 
     np.save(no_conf_dir + "/survivorships", survivorships)
@@ -257,12 +265,15 @@ if __name__ == "__main__":
     np.save(no_conf_dir + "/best_pred", best_pred)
     np.save(no_conf_dir + "/best_prey", best_prey)
 
-    print("EVOLUTION LEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
+    print("CO-EVOLUTION LEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
-    print("\nco-evol confusion\n")
+
+
+    print("\nCO-EVOL CONFUSION\n")
     
+    prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
     t1 = time.time()
-    survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=True)
+    survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=True)
     t2 = time.time()
 
     np.save(conf_dir + "/survivorships", survivorships)
@@ -274,5 +285,5 @@ if __name__ == "__main__":
     np.save(conf_dir + "/best_pred", best_pred)
     np.save(conf_dir + "/best_prey", best_prey)
 
-    print("EVOLUTION LEARNING WITH CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
+    print("CO-EVOLUTION LEARNING WITH CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
