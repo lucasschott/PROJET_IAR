@@ -26,7 +26,7 @@ env_y = 512
 eat_distance = 9
 timesteps = 2000
 pop_size = 10
-nb_gen = 600
+nb_gen = 200
 
 pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
 prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))

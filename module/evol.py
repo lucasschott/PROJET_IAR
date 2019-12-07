@@ -48,8 +48,8 @@ env_x = 512
 env_y = 512
 eat_distance = 9
 timesteps = 2000
-pop_size = 20
-nb_gen_pred = 20 #200
+pop_size = 10
+nb_gen_pred = 30 #200
 nb_gen = 100 #1200
 
 
@@ -128,8 +128,8 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True, display=Tru
 
         eval_part=partial(eval, confusion=confusion)
         args = []
-        for prey_indiv in preys_population:
-            args.append((pred_genotype,prey_indiv))
+        for pred_indiv in preds_population:
+            args.append((pred_indiv,prey_genotype))
 
         all_fitnesses = pool.map(eval_part, args)
 
@@ -199,8 +199,8 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, popsize=20, confusion=Tru
         best_pred = preds_population[best_pred_idx]
         best_prey = preys_population[best_prey_idx]
 
-        if i%100==0 :
-            if confufion:
+        if i%10==0 :
+            if confusion:
                 np.save(conf_dir + "/best_pred_{}".format(i), best_pred)
                 np.save(conf_dir + "/best_prey_{}".format(i), best_prey)
             else:
@@ -236,15 +236,17 @@ if __name__ == "__main__":
 
     print("\npre-evol Pred\n")
 
-    _, _, _, pred_genotype = pred_evol(pred_genotype, nb_gen=nb_gen_pred, popsize=pop_size, confusion=False, display=False)
+    pred_genotype = pred_evol(pred_genotype, nb_gen=nb_gen_pred, popsize=pop_size, confusion=False, display=False)
 
     prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
 
     print("\nco-evol no confusion\n")
 
+    t1 = time.time()
     (survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors,
     swarm_dispersions, swarm_dispersions_errors, best_pred,
     best_prey) = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, popsize=pop_size, confusion=False)
+    t2 = time.time()
 
     np.save(no_conf_dir + "/survivorships", survivorships)
     np.save(no_conf_dir + "/survivorships-errors", survivorships_errors)
@@ -258,8 +260,10 @@ if __name__ == "__main__":
     print("EVOLUTION LEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
     print("\nco-evol confusion\n")
-
+    
+    t1 = time.time()
     survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = cmaes(nb_gen=nb_gen, popsize=pop_size, confusion=True)
+    t2 = time.time()
 
     np.save(conf_dir + "/survivorships", survivorships)
     np.save(conf_dir + "/survivorships-errors", survivorships_errors)
