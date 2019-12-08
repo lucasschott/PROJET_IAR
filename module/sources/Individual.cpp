@@ -187,26 +187,26 @@ void Individual::observe(Individual &other)
 
 	Individual copy = other;
 
-	if (this->pos_x > 412)
+	if (this->pos_x > 312)
 		right = true;
 
-	if (this->pos_x < 100)
+	if (this->pos_x < 200)
 		left = true;
 
-	if (this->pos_y < 100)
+	if (this->pos_y < 200)
 		down = true;
 
-	if (this->pos_y > 412)
+	if (this->pos_y > 312)
 		up = true;
 
-	if (left && copy.get_pos_x() > 412)
+	if (left && copy.get_pos_x() > 312)
 		copy.set_pos_x(copy.get_pos_x() - 512);
-	else if (right && copy.get_pos_x() < 100)
+	else if (right && copy.get_pos_x() < 200)
 		copy.set_pos_x(copy.get_pos_x() + 512);
 
-	if (up && copy.get_pos_y() < 100)
+	if (up && copy.get_pos_y() < 200)
 		copy.set_pos_y(copy.get_pos_y() + 512);
-	else if (down && copy.get_pos_y() > 412)
+	else if (down && copy.get_pos_y() > 312)
 		copy.set_pos_y(copy.get_pos_y() - 512);
 
 
