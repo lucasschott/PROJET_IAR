@@ -15,6 +15,7 @@ class Individual
 
 public:
 	Individual(std::string type, double pos_x, double pos_y, double direction);
+	Individual(const Individual &other);
 
 	double get_pos_x();
 	double get_pos_y();

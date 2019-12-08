@@ -65,6 +65,23 @@ Individual::Individual(std::string type, double pos_x, double pos_y,
 
 }
 
+Individual::Individual(const Individual & other)
+{
+	this->is_alive = other.is_alive;
+	this->type = other.type;
+	this->pos_x = other.pos_x;
+	this->pos_y = other.pos_y;
+	this->id = generate_new_id();
+	this->direction = other.direction;
+	this->density = other.density;
+	this->nearest = other.nearest;
+	this->last_meal = other.last_meal;
+	this->view_distance = other.view_distance;
+	this->rotation = other.rotation;
+	this->velocity = other.velocity;
+	this->observations = other.observations;
+}
+
 double Individual::get_pos_x()
 {
 	return this->pos_x;
@@ -161,20 +178,50 @@ double Individual::get_angle_to(Individual &other)
 
 void Individual::observe(Individual &other)
 {
-	double distance = get_distance_to(other);
 	double angle;
 	int bin;
+	bool up = false;
+	bool down = false;
+	bool right = false;
+	bool left = false;
 
-	if (other.type == PREY && distance < this->nearest)
+	Individual copy = other;
+
+	if (this->pos_x > 412)
+		right = true;
+
+	if (this->pos_x < 100)
+		left = true;
+
+	if (this->pos_y < 100)
+		down = true;
+
+	if (this->pos_y > 412)
+		up = true;
+
+	if (left && copy.get_pos_x() > 412)
+		copy.set_pos_x(copy.get_pos_x() - 512);
+	else if (right && copy.get_pos_x() < 100)
+		copy.set_pos_x(copy.get_pos_x() + 512);
+
+	if (up && copy.get_pos_y() < 100)
+		copy.set_pos_y(copy.get_pos_y() + 512);
+	else if (down && copy.get_pos_y() > 412)
+		copy.set_pos_y(copy.get_pos_y() - 512);
+
+
+	double distance = get_distance_to(copy);
+
+	if (copy.type == PREY && distance < this->nearest)
 		this->nearest = distance;
 
-	if (other.type == PREY && distance < 30)
+	if (copy.type == PREY && distance < 30)
 		this->density += 1;
 
 	if (distance > this->view_distance)
 		return;
 
-	angle = this->get_angle_to(other);
+	angle = this->get_angle_to(copy);
 
 	// Translate to [0 PI/2] and switch to degrees
 	angle = (angle + M_PI / 2) * 180 / M_PI;
@@ -221,8 +268,17 @@ void Individual::apply_action(int action)
 	{
 		this->pos_x += cos(this->direction) * this->velocity;
 		this->pos_y += sin(this->direction) * this->velocity;
-		this->pos_x = std::min(500.0,std::max(0.0, this->pos_x));
-		this->pos_y = std::min(500.0,std::max(0.0, this->pos_y));
+
+		if (this->pos_x < 0)
+			this->pos_x = 512;
+		if (this->pos_x > 512)
+			this->pos_x = 0;
+		if (this->pos_y < 0)
+			this->pos_y = 512;
+		if (this->pos_y > 512)
+			this->pos_y = 0;
+		//this->pos_x = std::min(500.0,std::max(0.0, this->pos_x));
+		//this->pos_y = std::min(500.0,std::max(0.0, this->pos_y));
 	}
 
 	if (action == 2)

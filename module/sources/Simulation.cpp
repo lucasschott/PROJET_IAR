@@ -184,7 +184,7 @@ std::vector<double> Simulation::compute_swarm_density_and_dispersion()
 	if (this->preys.size() == 0)
 	{
 		results.push_back(0);
-		results.push_back(0);
+		results.push_back(1000);
 		return results;
 	}
 
