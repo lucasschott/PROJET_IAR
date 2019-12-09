@@ -47,10 +47,10 @@ num_predators = 1
 env_x = 512
 env_y = 512
 eat_distance = 9
-timesteps = 2000
-pop_size = 10
-nb_gen_pred = 10 #200
-nb_gen = 10 #1200
+timesteps = 100
+pop_size = 2
+nb_gen_pred = 1 #200
+nb_gen = 1 #1200
 save_freq = 1 #600
 
 
@@ -256,6 +256,8 @@ if __name__ == "__main__":
     best_prey) = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=False)
     t2 = time.time()
 
+    print("Saving to : ", no_conf_dir)
+
     np.save(no_conf_dir + "/survivorships", survivorships)
     np.save(no_conf_dir + "/survivorships-errors", survivorships_errors)
     np.save(no_conf_dir + "/swarm-densitys", swarm_densitys)
@@ -270,12 +272,13 @@ if __name__ == "__main__":
 
 
     print("\nCO-EVOL CONFUSION\n")
-    
+
     prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
     t1 = time.time()
     survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=True)
     t2 = time.time()
 
+    print("Saving to ", conf_dir)
     np.save(conf_dir + "/survivorships", survivorships)
     np.save(conf_dir + "/survivorships-errors", survivorships_errors)
     np.save(conf_dir + "/swarm-densitys", swarm_densitys)

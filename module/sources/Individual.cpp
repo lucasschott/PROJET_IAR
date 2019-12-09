@@ -35,7 +35,7 @@ double get_norm(double *vec, int dim)
 }
 
 Individual::Individual(std::string type, double pos_x, double pos_y,
-		       double direction)
+		       double direction, int env_x, int env_y)
 {
 	this->is_alive = true;
 	this->type = type;
@@ -46,6 +46,8 @@ Individual::Individual(std::string type, double pos_x, double pos_y,
 	this->density = 0;
 	this->nearest = std::numeric_limits<double>::infinity();
 	this->last_meal = 10;
+	this->env_x = env_x;
+	this->env_y = env_y;
 
 	if (type == PREDATOR)
 	{
@@ -63,23 +65,7 @@ Individual::Individual(std::string type, double pos_x, double pos_y,
 		this->observations = std::vector<int>(2 * NB_BINS, 0);
 	}
 
-}
-
-Individual::Individual(const Individual & other)
-{
-	this->is_alive = other.is_alive;
-	this->type = other.type;
-	this->pos_x = other.pos_x;
-	this->pos_y = other.pos_y;
-	this->id = generate_new_id();
-	this->direction = other.direction;
-	this->density = other.density;
-	this->nearest = other.nearest;
-	this->last_meal = other.last_meal;
-	this->view_distance = other.view_distance;
-	this->rotation = other.rotation;
-	this->velocity = other.velocity;
-	this->observations = other.observations;
+	this->compute_flags();
 }
 
 double Individual::get_pos_x()
@@ -125,6 +111,9 @@ void Individual::clear_density()
 void Individual::clear_nearest()
 {
 	//this->nearest = std::numeric_limits<double>::infinity();
+	//
+	// Arbitrary constant to handle default value and avoid inducing
+	// bias in the final average nearest value
 	this->nearest = 1000;
 }
 
@@ -180,34 +169,23 @@ void Individual::observe(Individual &other)
 {
 	double angle;
 	int bin;
-	bool up = false;
-	bool down = false;
-	bool right = false;
-	bool left = false;
 
-	Individual copy = other;
+	Individual copy(other);
 
-	if (this->pos_x > 312)
-		right = true;
+	// Slow implementation to represent the environment as a torus
+	// for the individuals according to their view distance and the
+	// dimensions of the environment
+	if (this->left && copy.get_pos_x() > (this->env_x - this->view_distance))
+		copy.set_pos_x(copy.get_pos_x() - this->env_x);
 
-	if (this->pos_x < 200)
-		left = true;
+	else if (this->right && copy.get_pos_x() < this->view_distance)
+		copy.set_pos_x(copy.get_pos_x() + this->env_x);
 
-	if (this->pos_y < 200)
-		down = true;
+	if (this->up && copy.get_pos_y() < this->view_distance)
+		copy.set_pos_y(copy.get_pos_y() + this->env_y);
 
-	if (this->pos_y > 312)
-		up = true;
-
-	if (left && copy.get_pos_x() > 312)
-		copy.set_pos_x(copy.get_pos_x() - 512);
-	else if (right && copy.get_pos_x() < 200)
-		copy.set_pos_x(copy.get_pos_x() + 512);
-
-	if (up && copy.get_pos_y() < 200)
-		copy.set_pos_y(copy.get_pos_y() + 512);
-	else if (down && copy.get_pos_y() > 312)
-		copy.set_pos_y(copy.get_pos_y() - 512);
+	else if (this->down && copy.get_pos_y() > (this->env_y - this->view_distance))
+		copy.set_pos_y(copy.get_pos_y() - this->env_y);
 
 
 	double distance = get_distance_to(copy);
@@ -242,16 +220,6 @@ std::vector<int> Individual::get_observations()
 	return this->observations;
 }
 
-double Individual::get_density()
-{
-	return this->density;
-}
-
-double Individual::get_nearest()
-{
-	return this->nearest;
-}
-
 int Individual::get_last_meal()
 {
 	return this->last_meal;
@@ -262,6 +230,17 @@ void Individual::set_last_meal(int last_meal)
 	this->last_meal = last_meal;
 }
 
+double Individual::get_density()
+{
+	return this->density;
+}
+
+double Individual::get_nearest()
+{
+	return this->nearest;
+}
+
+
 void Individual::apply_action(int action)
 {
 	if (action >= 1)
@@ -270,15 +249,16 @@ void Individual::apply_action(int action)
 		this->pos_y += sin(this->direction) * this->velocity;
 
 		if (this->pos_x < 0)
-			this->pos_x = 512;
-		if (this->pos_x > 512)
-			this->pos_x = 0;
+			this->pos_x += this->env_x;
+
+		else if (this->pos_x > this->env_x)
+			this->pos_x = fmod(this->pos_x, this->env_x);
+
 		if (this->pos_y < 0)
-			this->pos_y = 512;
-		if (this->pos_y > 512)
-			this->pos_y = 0;
-		//this->pos_x = std::min(500.0,std::max(0.0, this->pos_x));
-		//this->pos_y = std::min(500.0,std::max(0.0, this->pos_y));
+			this->pos_y += this->env_y;
+
+		else if (this->pos_y > this->env_y)
+			this->pos_y = fmod(this->pos_y, this->env_y);
 	}
 
 	if (action == 2)
@@ -292,5 +272,16 @@ void Individual::apply_action(int action)
 		this->direction -= this->rotation;
 		this->direction = fmod(this->direction, 2 * M_PI);
 	}
+
+	this->compute_flags();
 }
 
+
+void Individual::compute_flags()
+{
+	// Assuming env lower bound to be 0 in each dimension
+	this->right = this->pos_x > (this->env_x - this->view_distance);
+	this->left = this->pos_x < this->view_distance;
+	this->down = this->pos_y < this->view_distance;
+	this->up = this->pos_y > (this->env_y - this->view_distance);
+}

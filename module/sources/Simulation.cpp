@@ -33,7 +33,6 @@ Simulation::Simulation(int input_size, int output_size, int num_preys,
 
 void Simulation::init_population()
 {
-	std::default_random_engine generator;
 	std::uniform_real_distribution<double> distribution_dir(0.0, 2 * M_PI);
 	std::uniform_real_distribution<double> distribution_xpos(0.0, env_x);
 	std::uniform_real_distribution<double> distribution_ypos(0.0, env_y);
@@ -44,21 +43,22 @@ void Simulation::init_population()
 
 	for (int i = 0; i < this->num_preys; i++)
 	{
-	    x_pos = distribution_xpos(generator);
-	    y_pos = distribution_ypos(generator);
-	    direction = distribution_dir(generator);
+	    x_pos = distribution_xpos(this->generator);
+	    y_pos = distribution_ypos(this->generator);
+	    direction = distribution_dir(this->generator);
 
-	    this->preys.push_back(Individual(PREY, x_pos, y_pos, direction));
+	    this->preys.push_back(Individual(PREY, x_pos, y_pos, direction,
+					     env_x, env_y));
 	}
 
 	for (int i = 0; i < this->num_predators; i++)
 	{
-	    x_pos = distribution_xpos(generator);
-	    y_pos = distribution_ypos(generator);
-	    direction = distribution_dir(generator);
+	    x_pos = distribution_xpos(this->generator);
+	    y_pos = distribution_ypos(this->generator);
+	    direction = distribution_dir(this->generator);
 
-	    this->predators.push_back(Individual(PREDATOR, x_pos,
-						 y_pos, direction));
+	    this->predators.push_back(Individual(PREDATOR, x_pos, y_pos,
+						 direction, env_x, env_y));
 	}
 }
 
@@ -66,6 +66,12 @@ void Simulation::clear_population()
 {
 	this->preys.clear();
 	this->predators.clear();
+}
+
+void Simulation::shuffle_vector(std::vector<Individual> &vector)
+{
+	static auto rng = std::default_random_engine {};
+	std::shuffle(std::begin(vector), std::end(vector), rng);
 }
 
 void Simulation::step()
@@ -79,11 +85,12 @@ void Simulation::step()
 	this->compute_predator_observations();
 	predator_actions = this->forward_predator();
 
-
 	this->apply_prey_actions(prey_actions);
+
 	this->apply_predator_actions(predator_actions);
 	this->eat_prey();
 	this->clear_population_observations();
+	this->shuffle_vector(this->preys);
 }
 
 bp::list Simulation::run(int timesteps)
@@ -348,10 +355,12 @@ bool Simulation::get_eat_flag(std::vector<int> observation)
 	double sum = std::accumulate(observation.begin(), observation.end(),
 				     0.0);
 	double prob = 1 / sum;
-	std::default_random_engine generator;
 	std::uniform_real_distribution<double> distribution(0.0, 1);
 
-	return  distribution(generator) <= prob;
+	double value = distribution(this->generator);
+	std::cout << value << std::endl;
+
+	return  distribution(this->generator) <= prob;
 }
 
 void Simulation::eat_prey()
@@ -373,11 +382,10 @@ void Simulation::eat_prey()
 		for (iter_prey = this->preys.begin(); iter_prey != this->preys.end();)
 		{
 
-
 			if ((*iter_pred).get_last_meal() < 10)
 				break;
 
-			if ((*iter_pred).get_distance_to(*iter_prey) <
+			if ((*iter_pred).get_distance_to(*iter_prey) <=
 			    this->eat_distance)
 			{
 				if (this->confusion == false)

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <random>
 #include <boost/python/numpy.hpp>
 #include "Individual.hpp"
 #include "Net.hpp"
@@ -37,6 +38,7 @@ public:
     void compute_prey_observations();
     void compute_predator_observations();
     void eat_prey();
+    void shuffle_vector(std::vector<Individual> &vector);
     std::vector<double> compute_swarm_density_and_dispersion();
     void apply_prey_actions(std::vector<int> &actions);
     void apply_predator_actions(std::vector<int> &actions);
@@ -60,6 +62,7 @@ private:
 
     std::vector<Individual> preys;
     std::vector<Individual> predators;
+    std::default_random_engine generator;
 
     Net prey_net;
     Net predator_net;
