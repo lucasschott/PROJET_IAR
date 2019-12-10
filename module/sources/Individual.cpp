@@ -170,23 +170,7 @@ void Individual::observe(Individual &other)
 	double angle;
 	int bin;
 
-	Individual copy(other);
-
-	// Slow implementation to represent the environment as a torus
-	// for the individuals according to their view distance and the
-	// dimensions of the environment
-	if (this->left && copy.get_pos_x() > (this->env_x - this->view_distance))
-		copy.set_pos_x(copy.get_pos_x() - this->env_x);
-
-	else if (this->right && copy.get_pos_x() < this->view_distance)
-		copy.set_pos_x(copy.get_pos_x() + this->env_x);
-
-	if (this->up && copy.get_pos_y() < this->view_distance)
-		copy.set_pos_y(copy.get_pos_y() + this->env_y);
-
-	else if (this->down && copy.get_pos_y() > (this->env_y - this->view_distance))
-		copy.set_pos_y(copy.get_pos_y() - this->env_y);
-
+	Individual copy = get_repositioned_individual(other);
 
 	double distance = get_distance_to(copy);
 
@@ -240,6 +224,24 @@ double Individual::get_nearest()
 	return this->nearest;
 }
 
+Individual Individual::get_repositioned_individual(Individual &other)
+{
+	Individual copy(other);
+
+	if (this->left && copy.get_pos_x() > (this->env_x - this->view_distance))
+		copy.set_pos_x(copy.get_pos_x() - this->env_x);
+
+	else if (this->right && copy.get_pos_x() < this->view_distance)
+		copy.set_pos_x(copy.get_pos_x() + this->env_x);
+
+	if (this->up && copy.get_pos_y() < this->view_distance)
+		copy.set_pos_y(copy.get_pos_y() + this->env_y);
+
+	else if (this->down && copy.get_pos_y() > (this->env_y - this->view_distance))
+		copy.set_pos_y(copy.get_pos_y() - this->env_y);
+
+	return copy;
+}
 
 void Individual::apply_action(int action)
 {

@@ -42,7 +42,7 @@ public:
     std::vector<double> compute_swarm_density_and_dispersion();
     void apply_prey_actions(std::vector<int> &actions);
     void apply_predator_actions(std::vector<int> &actions);
-    bool get_eat_flag(std::vector<int> observation);
+    bool get_eat_flag(std::vector<int> observation, Individual &prey);
     std::vector<int> forward_prey();
     std::vector<int> forward_predator();
 

@@ -30,6 +30,7 @@ public:
 	void clear_observations();
 	std::vector<int> get_observations();
 
+	Individual get_repositioned_individual(Individual &other);
 	void observe(Individual &other);
 	void apply_action(int action);
 	void compute_flags();

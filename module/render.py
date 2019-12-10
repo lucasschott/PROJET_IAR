@@ -35,8 +35,10 @@ parser.add_argument('--fps', default=60, type=int)
 parser.add_argument('--output', default=4, type=int)
 parser.add_argument('--num_preys', default=50, type=int)
 parser.add_argument('--num_predators', default=1, type=int)
-parser.add_argument('--eat_distance', default=6, type=int)
-parser.add_argument('--confusion', default=True, type=bool)
+parser.add_argument('--eat_distance', default=9, type=int)
+parser.add_argument('--confusion', dest='confusion', action='store_true')
+parser.add_argument('--no-confusion', dest='confusion', action='store_false')
+parser.set_defaults(confusion=True)
 parser.add_argument('--timesteps', default=2000, type=int)
 parser.add_argument('--pred', default='random', type=str)
 parser.add_argument('--prey', default='random', type=str)
@@ -48,6 +50,7 @@ args = parser.parse_args()
 pred = load_pred(args.pred)
 prey = load_prey(args.prey)
 
+print(args.confusion)
 s = pylib.Simulation(args.input, args.output, args.num_preys, args.num_predators, args.env_x, args.env_y, args.eat_distance, args.confusion)
 s.load_prey_genotype(prey)
 s.load_predator_genotype(pred)
@@ -69,6 +72,13 @@ pygame.draw.line(pred_sprite, BLACK, (7, 7), (7, 0), 2)
 
 FPS = args.fps
 
+count = args.num_preys
+init_count = args.num_preys
+fit_prey = 0
+fit_pred = 0
+
+old = [pos[2] for pos in s.get_predators_pos()]
+
 for timestep in range(args.timesteps):
     screen.fill(WHITE)
     clock.tick(FPS)
@@ -77,10 +87,21 @@ for timestep in range(args.timesteps):
     preys_pos = s.get_preys_pos()
     preds_pos = s.get_predators_pos()
 
+    fit_prey += len(preys_pos)
+    fit_pred += (init_count - len(preys_pos))
+
+    if len(preys_pos) != count:
+        count = len(preys_pos)
+
     for prey in preys_pos:
         screen.blit(prey_sprite, (int(prey[0]), int(prey[1])))
-    for pred in preds_pos:
-        screen.blit(pred_sprite, (int(pred[0]), int(pred[1])))
+
+    for index, pred in enumerate(preds_pos):
+        if old[index] - pred[2] > 0:
+            sp = pygame.transform.rotate(pred_sprite, -1 * np.degrees(pred[2]))
+        else:
+            sp = pygame.transform.rotate(pred_sprite, np.degrees(pred[2]))
+        screen.blit(sp, (int(pred[0]), int(pred[1])))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -90,3 +111,6 @@ for timestep in range(args.timesteps):
 
     if len(preys_pos) == 0:
         break
+
+print("FITNESS PREY : ", fit_prey)
+print("FITNESS PRED : ", fit_pred)

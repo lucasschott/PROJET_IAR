@@ -47,11 +47,11 @@ num_predators = 1
 env_x = 512
 env_y = 512
 eat_distance = 9
-timesteps = 100
-pop_size = 2
-nb_gen_pred = 1 #200
-nb_gen = 1 #1200
-save_freq = 1 #600
+timesteps = 2000
+pop_size = 10
+nb_gen_pred = 200
+nb_gen = 400
+save_freq = 20
 
 
 
@@ -113,13 +113,15 @@ def eval(indivs,confusion):
 ########## predator evolution ##########
 
 def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
-    
+
+    print("CONFUSION IS : ", confusion)
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
 
-    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 0.6, opts)
+    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 2, opts)
 
     best_pred = None
+    best_pred_fit = 0
 
     pool = mp.Pool(mp.cpu_count())
 
@@ -138,11 +140,15 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
         preds_results = np.mean(all_fitnesses, axis=1)
         preds_fitnesses = preds_results[:, PRED_FITNESS]
 
-        print("GENERATION {} : BEST = [{:1.2f}] AVERAGE = [{:1.2f}] WORST = [{:1.2f}]".format(i, -min(preds_fitnesses), -np.mean(preds_fitnesses), -max(preds_fitnesses)))
+        print("GENERATION {} : BEST = [{:1.2f}] AVERAGE = [{:1.2f}] WORST = [{:1.2f}] CURRENT_BEST = [{:1.2f}]".format(i, -min(preds_fitnesses), -np.mean(preds_fitnesses), -max(preds_fitnesses), -best_pred_fit))
 
         es_preds.tell(preds_population, preds_fitnesses)
 
-        best_pred = preds_population[np.argmin(preds_fitnesses)]
+        idx = np.argmin(preds_fitnesses)
+
+        if preds_fitnesses[idx] < best_pred_fit:
+            best_pred = preds_population[idx]
+            best_pred_fit = preds_fitnesses[idx]
 
     return best_pred
 
@@ -164,7 +170,12 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
     swarm_densitys_errors = []
     swarm_dispersions = []
     swarm_dispersions_errors = []
+
     best_pred = None
+    best_prey = None
+
+    best_pred_fit = 0
+    best_prey_fit = 0
 
     pool = mp.Pool(mp.cpu_count())
 
@@ -199,6 +210,14 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
 
         best_pred = preds_population[best_pred_idx]
         best_prey = preys_population[best_prey_idx]
+
+        if preds_fitnesses[best_pred_idx] < best_pred_fit:
+            best_pred = preds_population[best_pred_idx]
+            best_pred_fit = preds_fitnesses[best_pred_idx]
+
+        if preys_fitnesses[best_prey_idx] < best_prey_fit:
+            best_prey = preys_population[best_prey_idx]
+            best_prey_fit = preds_fitnesses[best_prey_idx]
 
         if i%save_freq==0 :
             if confusion:
@@ -244,8 +263,6 @@ if __name__ == "__main__":
 
     print("PRE EVOLUTION PREDATOR WITH RANDOM PREYS\nLEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format(
         (t2 - t1) // 60, (t2 - t1) % 60))
-
-
 
     print("\nCO-EVOL NO CONFUSION\n")
 

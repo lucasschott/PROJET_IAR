@@ -90,7 +90,7 @@ void Simulation::step()
 	this->apply_predator_actions(predator_actions);
 	this->eat_prey();
 	this->clear_population_observations();
-	this->shuffle_vector(this->preys);
+	//this->shuffle_vector(this->preys);
 }
 
 bp::list Simulation::run(int timesteps)
@@ -107,7 +107,7 @@ bp::list Simulation::run(int timesteps)
 		this->step();
 		current_results = this->compute_swarm_density_and_dispersion();
 		fitness_prey += this->preys.size();
-		fitness_pred += this->num_preys - this->preys.size();
+		fitness_pred += (this->num_preys - this->preys.size());
 
 		density += current_results[0];
 		dispersion += current_results[1];
@@ -350,15 +350,15 @@ void Simulation::apply_predator_actions(std::vector<int> &actions)
 	}
 }
 
-bool Simulation::get_eat_flag(std::vector<int> observation)
+bool Simulation::get_eat_flag(std::vector<int> observation, Individual &prey)
 {
+	if (this->confusion == false)
+		return true;
+
 	double sum = std::accumulate(observation.begin(), observation.end(),
 				     0.0);
-	double prob = 1 / sum;
+	double prob = 1 / (sum + prey.get_density());
 	std::uniform_real_distribution<double> distribution(0.0, 1);
-
-	double value = distribution(this->generator);
-	std::cout << value << std::endl;
 
 	return  distribution(this->generator) <= prob;
 }
@@ -382,21 +382,26 @@ void Simulation::eat_prey()
 		for (iter_prey = this->preys.begin(); iter_prey != this->preys.end();)
 		{
 
+			Individual copy = (*iter_pred).get_repositioned_individual(*iter_prey);
+
 			if ((*iter_pred).get_last_meal() < 10)
 				break;
 
-			if ((*iter_pred).get_distance_to(*iter_prey) <=
+			if ((*iter_pred).get_distance_to(copy) <=
 			    this->eat_distance)
 			{
-				if (this->confusion == false)
-					eat = true;
-				else
-					eat = get_eat_flag((*iter_pred).get_observations());
+				eat = get_eat_flag((*iter_pred).get_observations(), *iter_prey);
 
 				if (eat)
 				{
 					iter_prey = this->preys.erase(iter_prey);
 					(*iter_pred).set_last_meal(0);
+				}
+
+				else if (this->confusion == true)
+				{
+					(*iter_pred).set_last_meal(0);
+					iter_prey++;
 				}
 
 				else
