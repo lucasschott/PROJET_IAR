@@ -86,11 +86,12 @@ void Simulation::step()
 	predator_actions = this->forward_predator();
 
 	this->apply_prey_actions(prey_actions);
-
 	this->apply_predator_actions(predator_actions);
+
 	this->eat_prey();
 	this->clear_population_observations();
-	//this->shuffle_vector(this->preys);
+
+	this->shuffle_vector(this->preys);
 }
 
 bp::list Simulation::run(int timesteps)
@@ -355,12 +356,9 @@ bool Simulation::get_eat_flag(std::vector<int> observation, Individual &prey)
 	if (this->confusion == false)
 		return true;
 
-	double sum = std::accumulate(observation.begin(), observation.end(),
-				     0.0);
-	double prob = 1 / (sum + prey.get_density());
 	std::uniform_real_distribution<double> distribution(0.0, 1);
 
-	return  distribution(this->generator) <= prob;
+	return  distribution(this->generator) <= (1 / std::max(1.0, prey.get_density()));
 }
 
 void Simulation::eat_prey()
@@ -384,7 +382,7 @@ void Simulation::eat_prey()
 
 			Individual copy = (*iter_pred).get_repositioned_individual(*iter_prey);
 
-			if ((*iter_pred).get_last_meal() < 10)
+			if ((*iter_pred).get_last_meal() < 5)
 				break;
 
 			if ((*iter_pred).get_distance_to(copy) <=

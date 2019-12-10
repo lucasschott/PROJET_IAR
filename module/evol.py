@@ -48,10 +48,10 @@ env_x = 512
 env_y = 512
 eat_distance = 9
 timesteps = 2000
-pop_size = 10
-nb_gen_pred = 200
-nb_gen = 400
-save_freq = 20
+pop_size = 6
+nb_gen_pred = 100
+nb_gen = 200
+save_freq = 10
 
 
 
@@ -118,7 +118,7 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
 
-    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 2, opts)
+    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 1, opts)
 
     best_pred = None
     best_pred_fit = 0
@@ -161,8 +161,8 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
 
-    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 0.6, opts)
-    es_preys = cma.CMAEvolutionStrategy(prey_genotype, 0.6, opts)
+    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 1, opts)
+    es_preys = cma.CMAEvolutionStrategy(prey_genotype, 1, opts)
 
     survivorships = []
     survivorships_errors = []
@@ -211,15 +211,7 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
         best_pred = preds_population[best_pred_idx]
         best_prey = preys_population[best_prey_idx]
 
-        if preds_fitnesses[best_pred_idx] < best_pred_fit:
-            best_pred = preds_population[best_pred_idx]
-            best_pred_fit = preds_fitnesses[best_pred_idx]
-
-        if preys_fitnesses[best_prey_idx] < best_prey_fit:
-            best_prey = preys_population[best_prey_idx]
-            best_prey_fit = preds_fitnesses[best_prey_idx]
-
-        if i%save_freq==0 :
+        if i % save_freq==0 :
             if confusion:
                 np.save(conf_dir + "/best_pred_{}".format(i), best_pred)
                 np.save(conf_dir + "/best_prey_{}".format(i), best_prey)
@@ -227,8 +219,8 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
                 np.save(no_conf_dir + "/best_pred_{}".format(i), best_pred)
                 np.save(no_conf_dir + "/best_prey_{}".format(i), best_prey)
 
-        gen_results = np.mean(preds_results, axis=0)
-        gen_errors = np.std(preds_results, axis=0)
+        gen_results = np.mean(all_fitnesses.reshape(popsize * popsize, -1), axis=0)
+        gen_errors = np.std(all_fitnesses.reshape(popsize * popsize, -1), axis=0)
 
         density = gen_results[DENSITY]
         density_error = gen_errors[DENSITY]
