@@ -46,13 +46,12 @@ num_preys = 50
 num_predators = 1
 env_x = 512
 env_y = 512
-eat_distance = 9
+eat_distance = 5
 timesteps = 2000
-pop_size = 6
-nb_gen_pred = 100
-nb_gen = 200
-save_freq = 10
-
+pop_size = 5
+nb_gen_pred = 150
+nb_gen = 100
+save_freq = 20
 
 
 ########## simulation/evaluation ##########
@@ -114,7 +113,6 @@ def eval(indivs,confusion):
 
 def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
 
-    print("CONFUSION IS : ", confusion)
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
 
@@ -161,8 +159,8 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
 
-    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 1, opts)
-    es_preys = cma.CMAEvolutionStrategy(prey_genotype, 1, opts)
+    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 0.5, opts)
+    es_preys = cma.CMAEvolutionStrategy(prey_genotype, 0.5, opts)
 
     survivorships = []
     survivorships_errors = []
@@ -250,11 +248,13 @@ if __name__ == "__main__":
 
     pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
     t1 = time.time()
-    pred_genotype = pred_evol(pred_genotype, nb_gen=nb_gen_pred, popsize=pop_size, confusion=False)
+    #pred_genotype = pred_evol(pred_genotype, nb_gen=nb_gen_pred, popsize=pop_size, confusion=False)
     t2= time.time()
 
     print("PRE EVOLUTION PREDATOR WITH RANDOM PREYS\nLEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format(
         (t2 - t1) // 60, (t2 - t1) % 60))
+
+    pred_genotype = np.load("best_pred.npy")
 
     print("\nCO-EVOL NO CONFUSION\n")
 
@@ -264,8 +264,6 @@ if __name__ == "__main__":
     swarm_dispersions, swarm_dispersions_errors, best_pred,
     best_prey) = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=False)
     t2 = time.time()
-
-    print("Saving to : ", no_conf_dir)
 
     np.save(no_conf_dir + "/survivorships", survivorships)
     np.save(no_conf_dir + "/survivorships-errors", survivorships_errors)
@@ -279,7 +277,6 @@ if __name__ == "__main__":
     print("CO-EVOLUTION LEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
 
-
     print("\nCO-EVOL CONFUSION\n")
 
     prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
@@ -287,7 +284,6 @@ if __name__ == "__main__":
     survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=True)
     t2 = time.time()
 
-    print("Saving to ", conf_dir)
     np.save(conf_dir + "/survivorships", survivorships)
     np.save(conf_dir + "/survivorships-errors", survivorships_errors)
     np.save(conf_dir + "/swarm-densitys", swarm_densitys)

@@ -44,7 +44,7 @@ Individual::Individual(std::string type, double pos_x, double pos_y,
 	this->id = generate_new_id();
 	this->direction = direction;
 	this->density = 0;
-	this->nearest = std::numeric_limits<double>::infinity();
+	this->nearest = 1000;
 	this->last_meal = 10;
 	this->env_x = env_x;
 	this->env_y = env_y;
@@ -132,8 +132,14 @@ void Individual::compute_normal_view_point(double env_x_max, double env_y_max,
 
 double Individual::get_distance_to(Individual &other)
 {
-	double diff_x = this->pos_x - other.pos_x;
-	double diff_y = this->pos_y - other.pos_y;
+	double diff_x = abs(this->pos_x - other.pos_x);
+	double diff_y = abs(this->pos_y - other.pos_y);
+
+	if (diff_x > this->env_x / 2)
+		diff_x = this->env_x - diff_x;
+
+	if (diff_y > this->env_y / 2)
+		diff_y = this->env_y - diff_y;
 
 	return sqrt(pow(diff_x, 2) + pow(diff_y, 2));
 }
@@ -170,18 +176,18 @@ void Individual::observe(Individual &other)
 	double angle;
 	int bin;
 
-	Individual copy = get_repositioned_individual(other);
+	double distance = get_distance_to(other);
 
-	double distance = get_distance_to(copy);
-
-	if (copy.type == PREY && distance < this->nearest)
+	if (other.type == PREY && distance < this->nearest)
 		this->nearest = distance;
-
-	if (copy.type == PREY && distance < 30)
-		this->density += 1;
 
 	if (distance > this->view_distance)
 		return;
+
+	Individual copy = get_repositioned_individual(other);
+
+	if (copy.type == PREY && distance < 30)
+		this->density += 1;
 
 	angle = this->get_angle_to(copy);
 
@@ -227,17 +233,16 @@ double Individual::get_nearest()
 Individual Individual::get_repositioned_individual(Individual &other)
 {
 	Individual copy(other);
+	double diff_x = this->pos_x - copy.get_pos_x();
+	double diff_y = this->pos_y - copy.get_pos_y();
 
-	if (this->left && copy.get_pos_x() > (this->env_x - this->view_distance))
-		copy.set_pos_x(copy.get_pos_x() - this->env_x);
-
-	else if (this->right && copy.get_pos_x() < this->view_distance)
+	if (this->right && diff_x > this->env_x / 2)
 		copy.set_pos_x(copy.get_pos_x() + this->env_x);
-
-	if (this->up && copy.get_pos_y() < this->view_distance)
+	else if (this->left && diff_x < -1 * this->env_x / 2)
+		copy.set_pos_x(copy.get_pos_x() - this->env_x);
+	if (this->up && diff_y > this->env_y / 2)
 		copy.set_pos_y(copy.get_pos_y() + this->env_y);
-
-	else if (this->down && copy.get_pos_y() > (this->env_y - this->view_distance))
+	else if (this->down && diff_y < -1 * this->env_y / 2)
 		copy.set_pos_y(copy.get_pos_y() - this->env_y);
 
 	return copy;
@@ -282,8 +287,8 @@ void Individual::apply_action(int action)
 void Individual::compute_flags()
 {
 	// Assuming env lower bound to be 0 in each dimension
-	this->right = this->pos_x > (this->env_x - this->view_distance);
-	this->left = this->pos_x < this->view_distance;
-	this->down = this->pos_y < this->view_distance;
-	this->up = this->pos_y > (this->env_y - this->view_distance);
+	this->right = this->pos_x > this->env_x / 2;
+	this->left = this->pos_x < this->env_x / 2;
+	this->down = this->pos_y < this->env_y / 2;
+	this->up = this->pos_y > this->env_y / 2;
 }

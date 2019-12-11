@@ -15,6 +15,7 @@ BOOST_PYTHON_MODULE(pylib)
     .def("load_prey_genotype", &Simulation::load_prey_genotype)
     .def("run", &Simulation::run)
     .def("step", &Simulation::step)
+    .def("step_hook", &Simulation::step_hook)
     .def("load_predator_genotype", &Simulation::load_predator_genotype)
     .def("get_predators_pos", &Simulation::get_predators_pos)
     .def("get_preys_pos", &Simulation::get_preys_pos);

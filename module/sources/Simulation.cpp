@@ -68,10 +68,46 @@ void Simulation::clear_population()
 	this->predators.clear();
 }
 
+void Simulation::shuffle_predators()
+{
+	this->shuffle_vector(this->predators);
+}
+
+void Simulation::shuffle_preys()
+{
+	this->shuffle_vector(this->preys);
+}
+
 void Simulation::shuffle_vector(std::vector<Individual> &vector)
 {
 	static auto rng = std::default_random_engine {};
 	std::shuffle(std::begin(vector), std::end(vector), rng);
+}
+
+void Simulation::step_hook(PyObject *pred_hook, PyObject *prey_hook)
+{
+	std::vector<int> prey_actions;
+	std::vector<int> predator_actions;
+
+	this->compute_prey_observations();
+	prey_actions = this->forward_prey();
+
+	this->compute_predator_observations();
+	predator_actions = this->forward_predator();
+
+	if (pred_hook)
+		bp::call<void>(pred_hook, this->get_predators_observations());
+
+	if (prey_hook)
+		bp::call<void>(prey_hook, this->get_predators_observations());
+
+	this->apply_prey_actions(prey_actions);
+	this->apply_predator_actions(predator_actions);
+
+	this->eat_prey();
+	this->clear_population_observations();
+
+	this->shuffle_vector(this->preys);
 }
 
 void Simulation::step()
@@ -217,6 +253,27 @@ void Simulation::reset_population()
 	this->init_population();
 }
 
+bp::list Simulation::get_predators_observations()
+{
+	return this->get_individuals_observations(this->predators);
+}
+
+bp::list Simulation::get_preys_observations()
+{
+	return this->get_individuals_observations(this->preys);
+}
+
+bp::list Simulation::get_individuals_observations(std::vector<Individual> vector)
+{
+	bp::list list;
+	std::vector<Individual>::iterator iter;
+
+	for (iter = vector.begin(); iter != vector.end(); ++iter)
+		list.append(toPythonList((*iter).get_observations()));
+
+	return list;
+}
+
 bp::list Simulation::get_individuals_pos(std::vector<Individual> vector)
 {
 	bp::list list;
@@ -275,7 +332,6 @@ std::vector<int> Simulation::forward_prey()
 	}
 
 	torch::Tensor actions = at::argmax(this->prey_net.forward(batch), 1);
-
 
 	for (int i = 0; i < actions.size(0); i++)
 		converted.push_back(actions[i].item().toInt());
@@ -351,7 +407,7 @@ void Simulation::apply_predator_actions(std::vector<int> &actions)
 	}
 }
 
-bool Simulation::get_eat_flag(std::vector<int> observation, Individual &prey)
+bool Simulation::get_eat_flag(Individual &prey)
 {
 	if (this->confusion == false)
 		return true;
@@ -379,16 +435,13 @@ void Simulation::eat_prey()
 
 		for (iter_prey = this->preys.begin(); iter_prey != this->preys.end();)
 		{
-
-			Individual copy = (*iter_pred).get_repositioned_individual(*iter_prey);
-
-			if ((*iter_pred).get_last_meal() < 5)
+			if ((*iter_pred).get_last_meal() < 10)
 				break;
 
-			if ((*iter_pred).get_distance_to(copy) <=
+			if ((*iter_pred).get_distance_to(*iter_prey) <=
 			    this->eat_distance)
 			{
-				eat = get_eat_flag((*iter_pred).get_observations(), *iter_prey);
+				eat = get_eat_flag(*iter_prey);
 
 				if (eat)
 				{

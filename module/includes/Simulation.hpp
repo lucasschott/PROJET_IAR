@@ -34,17 +34,31 @@ public:
     void load_predator_genotype(bp::list genotype);
 
     void step();
+    void step_hook(PyObject *pred_hook, PyObject *prey_hook);
     bp::list run(int timesteps);
+
     void compute_prey_observations();
     void compute_predator_observations();
+
     void eat_prey();
+
     void shuffle_vector(std::vector<Individual> &vector);
+    void shuffle_preys();
+    void shuffle_predators();
+
     std::vector<double> compute_swarm_density_and_dispersion();
+
     void apply_prey_actions(std::vector<int> &actions);
     void apply_predator_actions(std::vector<int> &actions);
-    bool get_eat_flag(std::vector<int> observation, Individual &prey);
+
+    bool get_eat_flag(Individual &prey);
+
     std::vector<int> forward_prey();
     std::vector<int> forward_predator();
+
+    bp::list get_individuals_observations(std::vector<Individual> vector);
+    bp::list get_preys_observations();
+    bp::list get_predators_observations();
 
     bp::list get_individuals_pos(std::vector<Individual> vector);
     bp::list get_preys_pos();
