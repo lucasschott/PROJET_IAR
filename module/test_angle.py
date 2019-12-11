@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 
-env_size = 500
+env_size = 512
 view_distance = 200
 
 fig, ax=plt.subplots()
@@ -19,6 +19,54 @@ UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
+
+def test2(point1, point2):
+    diffs = point1 - point2
+    new_point = np.array([point2[0], point2[1]])
+
+    if (point1[0] > env_size / 2 and diffs[0] > 0 and abs(diffs[0]) > env_size / 2):
+        new_point[0] += env_size
+
+    elif point1[0] < env_size / 2 and diffs[0] < 0 and abs(diffs[0]) > env_size / 2:
+        new_point[0] -= env_size
+
+    if (point1[1] > env_size / 2 and diffs[1] > 0 and abs(diffs[1]) > env_size / 2):
+        new_point[1] += env_size
+
+    elif point1[1] < env_size / 2 and diffs[1] < 0 and abs(diffs[1]) > env_size / 2:
+        new_point[1] -= env_size
+
+
+    return new_point
+
+def distance_torus(point1, point2):
+    diffs = np.abs(point1 - point2)
+
+    if diffs[0] > env_size / 2:
+        diffs[0] = env_size - diffs[0]
+
+    if diffs[1] > env_size / 2:
+        diffs[1] = env_size - diffs[1]
+
+    return np.linalg.norm(diffs)
+
+def test(point1, point2):
+    diffs = point1 - point2
+    new_point = np.array([point2[0], point2[1]])
+
+    if (point1[0] > env_size / 2 and diffs[0] > env_size / 2):
+        new_point[0] += env_size
+
+    elif point1[0] < env_size / 2 and diffs[0] < -1 * env_size / 2:
+        new_point[0] -= env_size
+
+    if (point1[1] > env_size / 2 and diffs[1] > env_size / 2):
+        new_point[1] += env_size
+
+    elif point1[1] < env_size / 2 and diffs[1] < -1 * env_size / 2:
+        new_point[1] -= env_size
+
+    return new_point
 
 def get_new_point(point1, point2):
 
@@ -34,23 +82,26 @@ def get_new_point(point1, point2):
 
     new_point = [point2[0], point2[1]]
 
-    if flags_1[LEFT] and new_point[0] > env_size - view_distance:
+    if flags_1[LEFT] and new_point[0] > env_size - (view_distance - point_1[0]):
         new_point[0] -= env_size
 
-    elif flags_1[RIGHT] and new_point[0] < view_distance:
+    elif flags_1[RIGHT] and new_point[0] + env_size - point_1[0] < view_distance:
         new_point[0] += env_size
 
-    if flags_1[DOWN] and new_point[1] > env_size - view_distance:
+    if flags_1[DOWN] and new_point[1] > env_size - (view_distance - point_1[1]):
         new_point[1] -= env_size
 
-    elif flags_1[UP] and new_point[1] < view_distance:
+    elif flags_1[UP] and new_point[1] + env_size - point_1[1] < view_distance:
         new_point[1] += env_size
 
     return np.array(new_point)
 
-point_1 = np.array([450, 450])
-point_2_ori = np.random.rand(2)
+point_1 = np.random.rand(2) * env_size
+point_2_ori = np.random.rand(2) * env_size
 point_2 = get_new_point(point_1, point_2_ori)
+point_2 = test(point_1, point_2_ori)
+
+print("torus distance : ", distance_torus(point_1, point_2_ori))
 
 direction_1 = np.random.rand() * 2 * np.pi
 direction_2 = 0
@@ -132,5 +183,8 @@ print("bin = ", angle_reset // 15)
 
 ax.set_xlim(-100, 600)
 ax.set_ylim(-100, 600)
+
+print("distance to original : ", np.linalg.norm(point_1 - point_2_ori))
+print("distance to repositioned : ", np.linalg.norm(point_1 - point_2))
 
 plt.show()
