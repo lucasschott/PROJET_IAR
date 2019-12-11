@@ -9,8 +9,12 @@ import pygame
 import multiprocessing as mp
 from build import pylib
 
-PRED_NETWORK_SIZE = 520
-PREY_NETWORK_SIZE = PRED_NETWORK_SIZE + 156
+input = 12
+output = 4
+
+LAYER = 12
+PRED_NETWORK_SIZE = input*LAYER+LAYER + LAYER*output+output
+PREY_NETWORK_SIZE = (input*2)*LAYER+LAYER + LAYER*output+output
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
