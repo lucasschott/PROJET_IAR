@@ -3,13 +3,15 @@
 Net::Net(int input, int output)
 {
 	    fc1 = register_module("fc1", torch::nn::Linear(input, 12));
-        fc2 = register_module("fc2", torch::nn::Linear(12, output));
+	    fc2 = register_module("fc2", torch::nn::Linear(12, 12));
+	    fc3 = register_module("fc3", torch::nn::Linear(12, output));
 }
 
 torch::Tensor Net::forward(torch::Tensor x)
 {
-	    x = torch::sigmoid(fc1->forward(x));
-	    x = torch::sigmoid(fc2->forward(x));
+	    x = torch::relu(fc1->forward(x));
+	    x = torch::relu(fc2->forward(x));
+	    x = torch::relu(fc3->forward(x));
 
 	    return x;
 }
@@ -61,5 +63,6 @@ void Net::load_linear_from_vector(torch::nn::Linear module,
 void Net::load_from_vector(std::vector<float> params)
 {
 	load_linear_from_vector(this->fc1, params);
-    load_linear_from_vector(this->fc2, params);
+	load_linear_from_vector(this->fc2, params);
+	load_linear_from_vector(this->fc3, params);
 }

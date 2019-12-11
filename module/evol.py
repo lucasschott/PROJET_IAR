@@ -1,4 +1,5 @@
 import numpy as np
+import argparse
 import time
 import cma
 from functools import partial
@@ -15,72 +16,29 @@ import shutil
 conf_dir  = "result_confusion"
 no_conf_dir  = "result_no_confusion"
 
-if os.path.isdir(no_conf_dir):
-    ans = input(no_conf_dir + " directory already exists, do you want to overwrite it ?")
-    if ans=="yes" or ans=="y":
-        shutil.rmtree(no_conf_dir, ignore_errors=True)
-    else:
-        exit()
-if os.path.isdir(conf_dir):
-    ans = input(conf_dir + " directory already exists, do you want to overwrite it ?")
-    if ans=="yes" or ans=="y":
-        shutil.rmtree(conf_dir, ignore_errors=True)
-    else:
-        exit()
-
-os.mkdir(no_conf_dir)
-os.mkdir(conf_dir)
 
 
 
 ########## evolution paramaters ##########
 
-input = 12
-output = 4
+net_input = 12
+net_output = 4
 
 LAYER = 12
-PRED_NETWORK_SIZE = input*LAYER+LAYER + LAYER*output+output
-PREY_NETWORK_SIZE = (input*2)*LAYER+LAYER + LAYER*output+output
+PRED_NETWORK_SIZE = net_input * LAYER + LAYER + LAYER * LAYER + LAYER + LAYER * net_output + net_output
+PREY_NETWORK_SIZE = (net_input * 2) * LAYER + LAYER + LAYER * LAYER + LAYER + LAYER * net_output + net_output
 
 num_preys = 50
 num_predators = 1
 env_x = 512
 env_y = 512
-eat_distance = 5
+eat_distance = 9
 timesteps = 2000
 pop_size = 5
-nb_gen_pred = 150
+nb_gen_pred = 100
 nb_gen = 100
 save_freq = 20
 
-
-########## simulation/evaluation ##########
-
-def run_simulation(s, iter):
-    results = []
-    t1 = time.time()
-    for i in range(iter):
-        s.reset_population()
-        s.load_prey_genotype(prey_genotype)
-        s.load_predator_genotype(pred_genotype)
-        results.append(s.run(timesteps))
-
-    t2 = time.time()
-    total = t2 - t1
-    per_simulation = total / iter
-    print(results)
-    print(iter, " simulation ran in : finished in {:1.2f} s [{:1.0f} fps] [{:3.2f} s per simulation]".format(t2 - t1, (iter * timesteps) / (t2 - t1), per_simulation))
-    return results
-
-
-"""
-    Simulation object
-    run returns an array : [0] density
-                           [1] dispersion
-                           [2] prey_fitness
-                           [3] pred_fitness
-                           [4] survivorship
-"""
 
 DENSITY = 0
 DISPERSION = 1
@@ -89,8 +47,8 @@ PRED_FITNESS = 3
 SURVIVORSHIP = 4
 
 
-def __eval__(pred_genotype,prey_genotype,confusion):
-    s_ = pylib.Simulation(input, output, num_preys, num_predators, env_x, env_y, eat_distance, confusion)
+def __eval__(pred_genotype,prey_genotype,confusion, timesteps, num_preys):
+    s_ = pylib.Simulation(net_input, net_output, num_preys, num_predators, env_x, env_y, eat_distance, confusion)
     s_.reset_population()
     s_.load_prey_genotype(list(prey_genotype))
     s_.load_predator_genotype(list(pred_genotype))
@@ -103,9 +61,9 @@ def __eval__(pred_genotype,prey_genotype,confusion):
     return results
 
 
-def eval(indivs,confusion):
+def eval(indivs,confusion,timesteps, num_preys):
     pred_indiv,prey_indiv = indivs
-    return __eval__(pred_indiv,prey_indiv,confusion)
+    return __eval__(pred_indiv,prey_indiv,confusion, timesteps, num_preys)
 
 
 
@@ -125,16 +83,18 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
 
     for i in range(nb_gen):
         preds_population = es_preds.ask()
-        prey_genotype = np.random.rand(PREY_NETWORK_SIZE)
+        preys_population = np.random.rand(popsize, PREY_NETWORK_SIZE)
 
-        eval_part=partial(eval, confusion=confusion)
+        eval_part=partial(eval, confusion=confusion, timesteps=timesteps, num_preys=int(max(1, (i / nb_gen) * num_preys)))
         args = []
+
         for pred_indiv in preds_population:
-            args.append((pred_indiv,prey_genotype))
+            for prey_indiv in preys_population:
+                args.append((pred_indiv,prey_indiv))
 
         all_fitnesses = pool.map(eval_part, args)
 
-        all_fitnesses = np.array(all_fitnesses).reshape(popsize,1,-1)
+        all_fitnesses = np.array(all_fitnesses).reshape(popsize,popsize,-1)
         preds_results = np.mean(all_fitnesses, axis=1)
         preds_fitnesses = preds_results[:, PRED_FITNESS]
 
@@ -144,7 +104,7 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
 
         idx = np.argmin(preds_fitnesses)
 
-        if preds_fitnesses[idx] < best_pred_fit:
+        if preds_fitnesses[idx] * preds_fitnesses[idx] / np.mean(preds_fitnesses) < best_pred_fit:
             best_pred = preds_population[idx]
             best_pred_fit = preds_fitnesses[idx]
 
@@ -181,7 +141,7 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
         preds_population = es_preds.ask(popsize)
         preys_population = es_preys.ask(popsize)
 
-        eval_part=partial(eval, confusion=confusion)
+        eval_part=partial(eval, confusion=confusion, timesteps=timesteps, num_preys=num_preys)
         args = []
         for pred_indiv in preds_population:
             for prey_indiv in preys_population:
@@ -243,18 +203,82 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
 if __name__ == "__main__":
 
 
+    parser = argparse.ArgumentParser()
 
-    print("\nPRE-EVOL PRED\n")
+    #parser.add_argument('--input', default=12, type=int)
+    #parser.add_argument('--output', default=4, type=int)
+    parser.add_argument('--num_preys', default=50, type=int)
+    parser.add_argument('--num_predators', default=1, type=int)
+    parser.add_argument('--eat_distance', default=9, type=int)
+    parser.add_argument('--train_pred', dest='train_pred', action='store_true')
+    parser.add_argument('--no-train-pred', dest='train_pred', action='store_false')
+    parser.set_defaults(train_pred=True)
+    parser.add_argument('--timesteps', default=2000, type=int)
+    parser.add_argument('--pred', default='', type=str)
+    parser.add_argument('--env_x', default=512, type=int)
+    parser.add_argument('--env_y', default=512, type=int)
+    parser.add_argument('--popsize', default=5, type=int)
+    parser.add_argument('--nb_gen_pred', default=50, type=int)
+    parser.add_argument('--nb_gen', default=100, type=int)
+    parser.add_argument('--save_freq', default=20, type=int)
+    parser.add_argument('--conf_dir', default='result_confusion', type=str)
+    parser.add_argument('--no_conf_dir', default='result_no_confusion', type=str)
 
-    pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
-    t1 = time.time()
-    #pred_genotype = pred_evol(pred_genotype, nb_gen=nb_gen_pred, popsize=pop_size, confusion=False)
-    t2= time.time()
 
-    print("PRE EVOLUTION PREDATOR WITH RANDOM PREYS\nLEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format(
-        (t2 - t1) // 60, (t2 - t1) % 60))
+    args = parser.parse_args()
 
-    pred_genotype = np.load("best_pred.npy")
+    #net_input = args.input
+    #net_output = args.output
+    num_preys = args.num_preys
+    num_predators = args.num_predators
+    env_x = args.env_x
+    env_y = args.env_y
+    eat_distance = args.eat_distance
+    timesteps = args.timesteps
+    pop_size = args.popsize
+    nb_gen_pred = args.nb_gen_pred
+    nb_gen = args.nb_gen
+    save_freq = args.save_freq
+    train_pred = args.train_pred
+    pred_path = args.pred
+    conf_dir = args.conf_dir
+    no_conf_dir = args.no_conf_dir
+
+    if train_pred == False and pred_path == "":
+        print("You must specify a predator genotype path if pretraining is disabled by providing : --pred=PATH")
+        exit()
+
+    if os.path.isdir(no_conf_dir):
+        ans = input(no_conf_dir + " directory already exists, do you want to overwrite it ?")
+        if ans=="yes" or ans=="y":
+            shutil.rmtree(no_conf_dir, ignore_errors=True)
+        else:
+            exit()
+    if os.path.isdir(conf_dir):
+        ans = input(conf_dir + " directory already exists, do you want to overwrite it ?")
+        if ans=="yes" or ans=="y":
+            shutil.rmtree(conf_dir, ignore_errors=True)
+        else:
+            exit()
+
+    os.mkdir(no_conf_dir)
+    os.mkdir(conf_dir)
+
+    if train_pred:
+        print("\nPRE-EVOL PRED\n")
+
+        pred_genotype = list(np.random.rand(PRED_NETWORK_SIZE))
+        t1 = time.time()
+        pred_genotype = pred_evol(pred_genotype, nb_gen=nb_gen_pred, popsize=pop_size, confusion=False)
+        t2= time.time()
+
+        print("PRE EVOLUTION PREDATOR WITH RANDOM PREYS\nLEARNING WITHOUT CONFUSION FINISHED IN : {} m {} s".format(
+            (t2 - t1) // 60, (t2 - t1) % 60))
+
+        np.save("best_pred.npy", pred_genotype)
+
+    else:
+        pred_genotype = np.load(args.pred)
 
     print("\nCO-EVOL NO CONFUSION\n")
 

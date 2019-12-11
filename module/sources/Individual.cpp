@@ -53,7 +53,7 @@ Individual::Individual(std::string type, double pos_x, double pos_y,
 	{
 		this->view_distance = 200;
 		this->rotation = (6.0 * M_PI) / 180.0;
-		this->velocity = 9;
+		this->velocity = 2.25;
 		this->observations = std::vector<int>(NB_BINS, 0);
 	}
 
@@ -61,7 +61,7 @@ Individual::Individual(std::string type, double pos_x, double pos_y,
 	{
 		this->view_distance = 100;
 		this->rotation = (8.0 * M_PI) / 180.0;
-		this->velocity = 3;
+		this->velocity = 0.75;
 		this->observations = std::vector<int>(2 * NB_BINS, 0);
 	}
 
@@ -250,7 +250,7 @@ Individual Individual::get_repositioned_individual(Individual &other)
 
 void Individual::apply_action(int action)
 {
-	if (action >= 1)
+	if (action == 1)
 	{
 		this->pos_x += cos(this->direction) * this->velocity;
 		this->pos_y += sin(this->direction) * this->velocity;
@@ -272,12 +272,42 @@ void Individual::apply_action(int action)
 	{
 		this->direction += this->rotation;
 		this->direction = fmod(this->direction, 2 * M_PI);
+
+		this->pos_x += cos(this->direction) * this->velocity;
+		this->pos_y += sin(this->direction) * this->velocity;
+
+		if (this->pos_x < 0)
+			this->pos_x += this->env_x;
+
+		else if (this->pos_x > this->env_x)
+			this->pos_x = fmod(this->pos_x, this->env_x);
+
+		if (this->pos_y < 0)
+			this->pos_y += this->env_y;
+
+		else if (this->pos_y > this->env_y)
+			this->pos_y = fmod(this->pos_y, this->env_y);
 	}
 
 	if (action == 3)
 	{
 		this->direction -= this->rotation;
 		this->direction = fmod(this->direction, 2 * M_PI);
+
+		this->pos_x += cos(this->direction) * this->velocity;
+		this->pos_y += sin(this->direction) * this->velocity;
+
+		if (this->pos_x < 0)
+			this->pos_x += this->env_x;
+
+		else if (this->pos_x > this->env_x)
+			this->pos_x = fmod(this->pos_x, this->env_x);
+
+		if (this->pos_y < 0)
+			this->pos_y += this->env_y;
+
+		else if (this->pos_y > this->env_y)
+			this->pos_y = fmod(this->pos_y, this->env_y);
 	}
 
 	this->compute_flags();

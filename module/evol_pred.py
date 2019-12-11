@@ -155,7 +155,7 @@ def cmaes(nb_gen=15, confusion=True, display=True):
 if __name__ == "__main__":
 
     t1 = time.time()
-    survivorships, swarm_densitys, swarm_dispersions, best_pred = cmaes(nb_gen=100,confusion=confusion)
+    survivorships, swarm_densitys, swarm_dispersions, best_pred = cmaes(nb_gen=500,confusion=confusion)
     t2 = time.time()
 
     print("EVOLUTION LEARNING FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
