@@ -1,5 +1,5 @@
 libtorch/
-./result_confusion
-./result_no_confusion
+./result_confusion*
+./result_no_confusion*
 build/
 *.zip
