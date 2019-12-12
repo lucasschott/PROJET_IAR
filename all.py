@@ -11,7 +11,7 @@ def run(start=0,stop=10):
 
     for i in range(start,stop):
 
-        evol.main(pop_size=3,nb_gen_pred=5,nb_gen=5,save_freq=2,
+        evol.main(pop_size=10,nb_gen_pred=100,nb_gen=200,save_freq=20,
             conf_dir=conf_dir+"_{}".format(i),
             no_conf_dir=no_conf_dir+"_{}".format(i))
 
@@ -46,7 +46,7 @@ def plot(start=0,stop=10):
     no_conf_survivorships_mean = np.mean(no_conf_survivorships,axis=0)
     no_conf_swarm_densitys_mean = np.mean(no_conf_swarm_densitys,axis=0)
     no_conf_swarm_dispersions_mean = np.mean(no_conf_swarm_dispersions,axis=0)
-    
+
     conf_survivorships_errors = np.std(conf_survivorships,axis=0)
     conf_swarm_densitys_errors = np.std(conf_swarm_densitys,axis=0)
     conf_swarm_dispersions_errors = np.std(conf_swarm_dispersions,axis=0)
@@ -107,7 +107,6 @@ if __name__ == "__main__":
     do_run = args.run
     do_plot = args.plot
 
-    
     if do_run:
         if os.path.isdir(results_dir):
             ans = input(results_dir + "directory already exists, do you want to overwrite it ?")
