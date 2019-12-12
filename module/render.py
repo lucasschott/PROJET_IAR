@@ -13,8 +13,8 @@ net_input = 12
 net_output = 4
 
 LAYER = 12
-PRED_NETWORK_SIZE = net_input * LAYER + LAYER + LAYER * LAYER + LAYER + LAYER * net_output + net_output
-PREY_NETWORK_SIZE = (net_input * 2) * LAYER + LAYER + LAYER * LAYER + LAYER + LAYER * net_output + net_output
+PRED_NETWORK_SIZE = net_input*LAYER+LAYER + LAYER*net_output+net_output
+PREY_NETWORK_SIZE = (net_input*2)*LAYER+LAYER + LAYER*net_output+net_output
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)

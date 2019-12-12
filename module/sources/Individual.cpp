@@ -53,7 +53,7 @@ Individual::Individual(std::string type, double pos_x, double pos_y,
 	{
 		this->view_distance = 200;
 		this->rotation = (6.0 * M_PI) / 180.0;
-		this->velocity = 2.25;
+		this->velocity = 3;
 		this->observations = std::vector<int>(NB_BINS, 0);
 	}
 
@@ -61,7 +61,7 @@ Individual::Individual(std::string type, double pos_x, double pos_y,
 	{
 		this->view_distance = 100;
 		this->rotation = (8.0 * M_PI) / 180.0;
-		this->velocity = 0.75;
+		this->velocity = 1;
 		this->observations = std::vector<int>(2 * NB_BINS, 0);
 	}
 

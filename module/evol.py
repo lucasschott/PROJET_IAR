@@ -25,8 +25,8 @@ net_input = 12
 net_output = 4
 
 LAYER = 12
-PRED_NETWORK_SIZE = net_input * LAYER + LAYER + LAYER * LAYER + LAYER + LAYER * net_output + net_output
-PREY_NETWORK_SIZE = (net_input * 2) * LAYER + LAYER + LAYER * LAYER + LAYER + LAYER * net_output + net_output
+PRED_NETWORK_SIZE = net_input*LAYER+LAYER + LAYER*net_output+net_output
+PREY_NETWORK_SIZE = (net_input*2)*LAYER+LAYER + LAYER*net_output+net_output
 
 num_preys = 50
 num_predators = 1
@@ -37,7 +37,7 @@ timesteps = 2000
 pop_size = 5
 nb_gen_pred = 100
 nb_gen = 100
-save_freq = 20
+save_freq = 10
 
 
 DENSITY = 0
@@ -74,7 +74,7 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
 
-    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 1, opts)
+    es_preds = cma.CMAEvolutionStrategy(pred_genotype, 0.5, opts)
 
     best_pred = None
     best_pred_fit = 0
