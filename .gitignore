@@ -2,5 +2,4 @@ libtorch/
 result_confusion/
 result_no_confusion/
 build/
-save/
 *.zip
