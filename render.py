@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pygame
 
 import multiprocessing as mp
-from build import pylib
+from module.build import pylib
 
 net_input = 12
 net_output = 4

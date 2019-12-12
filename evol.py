@@ -6,7 +6,7 @@ from functools import partial
 import matplotlib.pyplot as plt
 
 import multiprocessing as mp
-from build import pylib
+from module.build import pylib
 import os
 import shutil
 
