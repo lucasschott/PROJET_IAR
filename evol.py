@@ -11,34 +11,14 @@ import os
 import shutil
 
 
-########## result directories ##########
-
-conf_dir  = "result_confusion"
-no_conf_dir  = "result_no_confusion"
 
 
-
-
-########## evolution paramaters ##########
-
-net_input = 12
-net_output = 4
+NET_INPUT = 12
+NET_OUTPUT = 4
 
 LAYER = 12
-PRED_NETWORK_SIZE = net_input*LAYER+LAYER + LAYER*net_output+net_output
-PREY_NETWORK_SIZE = (net_input*2)*LAYER+LAYER + LAYER*net_output+net_output
-
-num_preys = 50
-num_predators = 1
-env_x = 512
-env_y = 512
-eat_distance = 9
-timesteps = 2000
-pop_size = 5
-nb_gen_pred = 100
-nb_gen = 100
-save_freq = 10
-
+PRED_NETWORK_SIZE = NET_INPUT*LAYER+LAYER + LAYER*NET_OUTPUT+NET_OUTPUT
+PREY_NETWORK_SIZE = (NET_INPUT*2)*LAYER+LAYER + LAYER*NET_OUTPUT+NET_OUTPUT
 
 DENSITY = 0
 DISPERSION = 1
@@ -47,29 +27,31 @@ PRED_FITNESS = 3
 SURVIVORSHIP = 4
 
 
-def __eval__(pred_genotype,prey_genotype,confusion, timesteps, num_preys):
-    s_ = pylib.Simulation(net_input, net_output, num_preys, num_predators, env_x, env_y, eat_distance, confusion)
+
+
+def __eval__(pred_genotype, prey_genotype, confusion, timesteps, num_preys, num_preds, env_x, env_y, eat_distance):
+    s_ = pylib.Simulation(NET_INPUT, NET_OUTPUT, num_preys, num_preds, env_x, env_y, eat_distance, confusion)
     s_.reset_population()
     s_.load_prey_genotype(list(prey_genotype))
     s_.load_predator_genotype(list(pred_genotype))
     results = s_.run(timesteps)
 
-    """ Sign switch on fitnesses is necessary for CMAES """
     results[PRED_FITNESS] = -1 * results[PRED_FITNESS]
     results[PREY_FITNESS] = -1 * results[PREY_FITNESS]
 
     return results
 
 
-def eval(indivs,confusion,timesteps, num_preys):
+def eval(indivs, confusion, timesteps, num_preys, num_preds, env_x, env_y, eat_distance):
     pred_indiv,prey_indiv = indivs
-    return __eval__(pred_indiv,prey_indiv,confusion, timesteps, num_preys)
+    return __eval__(pred_indiv, prey_indiv, confusion, timesteps, num_preys, num_preds, env_x, env_y, eat_distance)
+
 
 
 
 ########## predator evolution ##########
 
-def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
+def pred_evol(pred_genotype, nb_gen=100, popsize=10, confusion=True, timesteps=2000, num_preys=50, num_preds=1, env_x=512, env_y=512, eat_distance=9):
 
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
@@ -85,7 +67,7 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
         preds_population = es_preds.ask()
         preys_population = np.random.rand(popsize, PREY_NETWORK_SIZE)
 
-        eval_part=partial(eval, confusion=confusion, timesteps=timesteps, num_preys=int(max(1, (i / nb_gen) * num_preys)))
+        eval_part = partial(eval, confusion=confusion, timesteps=timesteps, num_preys=int(max(1,(i/nb_gen)*num_preys)), num_preds=num_preds, env_x=env_x, env_y=env_y, eat_distance=eat_distance)
         args = []
 
         for pred_indiv in preds_population:
@@ -112,9 +94,10 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=20, confusion=True):
 
 
 
+
 ########## co evolution ##########
 
-def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20, confusion=True):
+def co_evol(pred_genotype, prey_genotype, nb_gen=200, save_freq=60, popsize=10, confusion=True, timesteps=2000, num_preys=50, num_preds=1, env_x=512, env_y=512, eat_distance=9):
 
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
@@ -141,7 +124,7 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
         preds_population = es_preds.ask(popsize)
         preys_population = es_preys.ask(popsize)
 
-        eval_part=partial(eval, confusion=confusion, timesteps=timesteps, num_preys=num_preys)
+        eval_part = partial(eval, confusion=confusion, timesteps=timesteps, num_preys=num_preys, num_preds=num_preds, env_x=env_x, env_y=env_y, eat_distance=eat_distance)
         args = []
         for pred_indiv in preds_population:
             for prey_indiv in preys_population:
@@ -198,51 +181,24 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=1200, save_freq=60, popsize=20,
 
 
 
+
 ########## main ##########
 
-if __name__ == "__main__":
+def main(num_preys = 50,
+        num_predators = 1,
+        env_x = 512,
+        env_y = 512,
+        eat_distance = 9,
+        timesteps = 2000,
+        pop_size = 10,
+        nb_gen_pred = 100,
+        nb_gen = 200,
+        save_freq = 10,
+        train_pred = True,
+        pred_path = "",
+        conf_dir = "result_confusion",
+        no_conf_dir = "result_no_confusion"):
 
-
-    parser = argparse.ArgumentParser()
-
-    #parser.add_argument('--input', default=12, type=int)
-    #parser.add_argument('--output', default=4, type=int)
-    parser.add_argument('--num_preys', default=50, type=int)
-    parser.add_argument('--num_predators', default=1, type=int)
-    parser.add_argument('--eat_distance', default=9, type=int)
-    parser.add_argument('--train_pred', dest='train_pred', action='store_true')
-    parser.add_argument('--no-train-pred', dest='train_pred', action='store_false')
-    parser.set_defaults(train_pred=True)
-    parser.add_argument('--timesteps', default=2000, type=int)
-    parser.add_argument('--pred', default='', type=str)
-    parser.add_argument('--env_x', default=512, type=int)
-    parser.add_argument('--env_y', default=512, type=int)
-    parser.add_argument('--popsize', default=5, type=int)
-    parser.add_argument('--nb_gen_pred', default=50, type=int)
-    parser.add_argument('--nb_gen', default=100, type=int)
-    parser.add_argument('--save_freq', default=20, type=int)
-    parser.add_argument('--conf_dir', default='result_confusion', type=str)
-    parser.add_argument('--no_conf_dir', default='result_no_confusion', type=str)
-
-
-    args = parser.parse_args()
-
-    #net_input = args.input
-    #net_output = args.output
-    num_preys = args.num_preys
-    num_predators = args.num_predators
-    env_x = args.env_x
-    env_y = args.env_y
-    eat_distance = args.eat_distance
-    timesteps = args.timesteps
-    pop_size = args.popsize
-    nb_gen_pred = args.nb_gen_pred
-    nb_gen = args.nb_gen
-    save_freq = args.save_freq
-    train_pred = args.train_pred
-    pred_path = args.pred
-    conf_dir = args.conf_dir
-    no_conf_dir = args.no_conf_dir
 
     if train_pred == False and pred_path == "":
         print("You must specify a predator genotype path if pretraining is disabled by providing : --pred=PATH")
@@ -319,3 +275,64 @@ if __name__ == "__main__":
 
     print("CO-EVOLUTION LEARNING WITH CONFUSION FINISHED IN : {} m {} s".format((t2 - t1) // 60, (t2 - t1) % 60))
 
+
+
+
+
+
+
+if __name__ == "__main__":
+
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--num_preys', default=50, type=int)
+    parser.add_argument('--num_predators', default=1, type=int)
+    parser.add_argument('--eat_distance', default=9, type=int)
+    parser.add_argument('--train_pred', dest='train_pred', action='store_true')
+    parser.add_argument('--no-train-pred', dest='train_pred', action='store_false')
+    parser.set_defaults(train_pred=True)
+    parser.add_argument('--timesteps', default=2000, type=int)
+    parser.add_argument('--pred', default='', type=str)
+    parser.add_argument('--env_x', default=512, type=int)
+    parser.add_argument('--env_y', default=512, type=int)
+    parser.add_argument('--popsize', default=5, type=int)
+    parser.add_argument('--nb_gen_pred', default=50, type=int)
+    parser.add_argument('--nb_gen', default=100, type=int)
+    parser.add_argument('--save_freq', default=20, type=int)
+    parser.add_argument('--conf_dir', default='result_confusion', type=str)
+    parser.add_argument('--no_conf_dir', default='result_no_confusion', type=str)
+
+
+    args = parser.parse_args()
+
+    num_preys = args.num_preys
+    num_predators = args.num_predators
+    env_x = args.env_x
+    env_y = args.env_y
+    eat_distance = args.eat_distance
+    timesteps = args.timesteps
+    pop_size = args.popsize
+    nb_gen_pred = args.nb_gen_pred
+    nb_gen = args.nb_gen
+    save_freq = args.save_freq
+    train_pred = args.train_pred
+    pred_path = args.pred
+    conf_dir = args.conf_dir
+    no_conf_dir = args.no_conf_dir
+
+    
+    main(num_preys = args.num_preys,
+        num_predators = args.num_predators,
+        env_x = args.env_x,
+        env_y = args.env_y,
+        eat_distance = args.eat_distance,
+        timesteps = args.timesteps,
+        pop_size = args.popsize,
+        nb_gen_pred = args.nb_gen_pred,
+        nb_gen = args.nb_gen,
+        save_freq = args.save_freq,
+        train_pred = args.train_pred,
+        pred_path = args.pred,
+        conf_dir = args.conf_dir,
+        no_conf_dir = args.no_conf_dir)
