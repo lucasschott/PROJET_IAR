@@ -90,6 +90,8 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=10, confusion=True, timesteps=2
             best_pred = preds_population[idx]
             best_pred_fit = preds_fitnesses[idx]
 
+    pool.close()
+
     return best_pred
 
 
@@ -97,7 +99,7 @@ def pred_evol(pred_genotype, nb_gen=100, popsize=10, confusion=True, timesteps=2
 
 ########## co evolution ##########
 
-def co_evol(pred_genotype, prey_genotype, nb_gen=200, save_freq=60, popsize=10, confusion=True, timesteps=2000, num_preys=50, num_preds=1, env_x=512, env_y=512, eat_distance=9):
+def co_evol(pred_genotype, prey_genotype, nb_gen=200, save_freq=60, popsize=10, confusion=True, timesteps=2000, num_preys=50, num_preds=1, env_x=512, env_y=512, eat_distance=9, conf_dir="result_confusion", no_conf_dir="result_no_confusion"):
 
     opts = cma.CMAOptions()
     opts['popsize'] = popsize
@@ -177,6 +179,8 @@ def co_evol(pred_genotype, prey_genotype, nb_gen=200, save_freq=60, popsize=10, 
         swarm_dispersions.append(dispersion)
         swarm_dispersions_errors.append(dispersion_error)
 
+    pool.close()
+
     return survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey
 
 
@@ -193,7 +197,7 @@ def main(num_preys = 50,
         pop_size = 10,
         nb_gen_pred = 100,
         nb_gen = 200,
-        save_freq = 10,
+        save_freq = 20,
         train_pred = True,
         pred_path = "",
         conf_dir = "result_confusion",
@@ -242,7 +246,7 @@ def main(num_preys = 50,
     t1 = time.time()
     (survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors,
     swarm_dispersions, swarm_dispersions_errors, best_pred,
-    best_prey) = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=False)
+    best_prey) = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=False,conf_dir=conf_dir, no_conf_dir=no_conf_dir)
     t2 = time.time()
 
     np.save(no_conf_dir + "/survivorships", survivorships)
@@ -261,7 +265,7 @@ def main(num_preys = 50,
 
     prey_genotype = list(np.random.rand(PREY_NETWORK_SIZE))
     t1 = time.time()
-    survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=True)
+    survivorships, survivorships_errors, swarm_densitys, swarm_densitys_errors, swarm_dispersions, swarm_dispersions_errors, best_pred, best_prey = co_evol(pred_genotype, prey_genotype, nb_gen=nb_gen, save_freq=save_freq, popsize=pop_size, confusion=True, conf_dir=conf_dir, no_conf_dir=no_conf_dir)
     t2 = time.time()
 
     np.save(conf_dir + "/survivorships", survivorships)
@@ -296,9 +300,9 @@ if __name__ == "__main__":
     parser.add_argument('--pred', default='', type=str)
     parser.add_argument('--env_x', default=512, type=int)
     parser.add_argument('--env_y', default=512, type=int)
-    parser.add_argument('--popsize', default=5, type=int)
-    parser.add_argument('--nb_gen_pred', default=50, type=int)
-    parser.add_argument('--nb_gen', default=100, type=int)
+    parser.add_argument('--popsize', default=10, type=int)
+    parser.add_argument('--nb_gen_pred', default=100, type=int)
+    parser.add_argument('--nb_gen', default=200, type=int)
     parser.add_argument('--save_freq', default=20, type=int)
     parser.add_argument('--conf_dir', default='result_confusion', type=str)
     parser.add_argument('--no_conf_dir', default='result_no_confusion', type=str)

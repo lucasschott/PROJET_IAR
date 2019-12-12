@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import os
+import shutil
 
 import evol
 
@@ -9,7 +11,7 @@ def run(start=0,stop=10):
 
     for i in range(start,stop):
 
-        evol.main(pop_size=5,nb_gen_pred=10,nb_gen=20,save_freq=5,
+        evol.main(pop_size=3,nb_gen_pred=5,nb_gen=5,save_freq=2,
             conf_dir=conf_dir+"_{}".format(i),
             no_conf_dir=no_conf_dir+"_{}".format(i))
 
@@ -45,12 +47,12 @@ def plot(start=0,stop=10):
     no_conf_swarm_densitys_mean = np.mean(no_conf_swarm_densitys,axis=0)
     no_conf_swarm_dispersions_mean = np.mean(no_conf_swarm_dispersions,axis=0)
     
-    conf_survivorships_error = np.std(conf_survivorships,axis=0)
-    conf_swarm_densitys_error = np.std(conf_swarm_densitys,axis=0)
-    conf_swarm_dispersions_error = np.std(conf_swarm_dispersions,axis=0)
-    no_conf_survivorships_error = np.std(no_conf_survivorships,axis=0)
-    no_conf_swarm_densitys_error = np.std(no_conf_swarm_densitys,axis=0)
-    no_conf_swarm_dispersions_error = np.std(no_conf_swarm_dispersions,axis=0)
+    conf_survivorships_errors = np.std(conf_survivorships,axis=0)
+    conf_swarm_densitys_errors = np.std(conf_swarm_densitys,axis=0)
+    conf_swarm_dispersions_errors = np.std(conf_swarm_dispersions,axis=0)
+    no_conf_survivorships_errors = np.std(no_conf_survivorships,axis=0)
+    no_conf_swarm_densitys_errors = np.std(no_conf_swarm_densitys,axis=0)
+    no_conf_swarm_dispersions_errors = np.std(no_conf_swarm_dispersions,axis=0)
 
     plt.figure()
     plt.title("Survivorship")
@@ -85,17 +87,35 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--confusion_dir', default='result_confusion', type=str)
-    parser.add_argument('--no_confusion_dir', default='result_no_confusion', type=str)
+    parser.add_argument('--results_dir', default='results', type=str)
+    parser.add_argument('--confusion_dir', default='confusion', type=str)
+    parser.add_argument('--no_confusion_dir', default='no_confusion', type=str)
     parser.add_argument('--start', default=0, type=int)
     parser.add_argument('--stop', default=10, type=int)
+    parser.add_argument('--no-run', dest='run', action='store_false')
+    parser.set_defaults(run=True)
+    parser.add_argument('--no-plot', dest='plot', action='store_false')
+    parser.set_defaults(plot=True)
 
     args = parser.parse_args()
 
-    conf_dir = args.confusion_dir
-    no_conf_dir = args.no_confusion_dir
+    results_dir = args.results_dir
+    conf_dir = results_dir + "/" + args.confusion_dir
+    no_conf_dir = results_dir + "/" + args.no_confusion_dir
     start = args.start
     stop = args.stop
+    do_run = args.run
+    do_plot = args.plot
 
-    run(start=start, stop=stop)
-    plot(start=start, stop=stop)
+    
+    if do_run:
+        if os.path.isdir(results_dir):
+            ans = input(results_dir + "directory already exists, do you want to overwrite it ?")
+            if ans=="yes" or ans=="y":
+                shutil.rmtree(results_dir,ignore_errors=True)
+            else:
+                exit()
+        os.mkdir(results_dir)
+        run(start=start, stop=stop)
+    if do_plot:
+        plot(start=start, stop=stop)
