@@ -110,12 +110,11 @@ The only difference between the two networks is the number of input parameters a
 
 In order to visualize properly , here is a representation of the predator network :
 
-![pred_network](visualisations/pred_network.svg)  <!-- .element height="100%" width="100%" -->
+![pred_network](visualisations/pred_network.svg)
 
 And the following is the prey network :
 
-![prey_network](visualisations/prey_network.svg){:height="700px" width="400px"}
-<a href="url"><img src="visualisations/prey_network.svg" align="center" height="500" width="800" ></a>
+![prey_network](visualisations/prey_network.svg =800x800)
 
 ## Results
 
