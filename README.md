@@ -114,7 +114,7 @@ In order to visualize properly , here is a representation of the predator networ
 
 And the following is the prey network :
 
-![prey_network](visualisations/prey_network.svg)
+![prey_network](visualisations/prey_network.svg =800x800)
 
 ## Results
 
