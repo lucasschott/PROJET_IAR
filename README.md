@@ -114,7 +114,7 @@ In order to visualize properly , here is a representation of the predator networ
 
 And the following is the prey network :
 
-![prey_network](visualisations/prey_network.svg)  <!-- .element height="100%" width="100%" -->
+![prey_network](visualisations/prey_network.svg)  <!-- .element height="500px" width="1000px" -->
 
 ## Results
 
