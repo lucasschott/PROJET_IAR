@@ -102,6 +102,20 @@ Not specifying --pred or --prey will generate a random genotype for both of them
 
 ![Example](visualisations/rendering.gif)
 
+## Controllers
+
+As stated in the introduction, instead of using markov networks we used simple feed forward neural network. Using only Linear layers with Relu activations functions.
+
+The only difference between the two networks is the number of input parameters as the preys have a dual layer retina allowing the detection of both preys and predators while the predators ( which are supposed to be alone in the simulation ) can only detect preys in their field of view.
+
+In order to visualize properly , here is a representation of the predator network :
+
+![pred_network](visualisation/pred_network.svg)
+
+And the following is the prey network :
+
+![prey_network](visualisation/prey_network.svg)
+
 ## Results
 
 We ran 10 co evolutions with the following parameters :
