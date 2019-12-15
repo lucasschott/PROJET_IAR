@@ -117,13 +117,13 @@ The only difference between the two networks is the number of input parameters a
 In order to visualize properly , here is a representation of the predator network :
 
 <p align="center">
-  <img src="visualisations/pred.png">
+  <img src="visualisations/network/pred_nn.png">
 </p>
 
 And the following is the prey network :
 
 <p align="center">
-  <img src="visualisations/prey.png">
+  <img src="visualisations/network/prey_nn.png">
 </p>
 
 ## Results
