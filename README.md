@@ -100,7 +100,9 @@ python render.py --pred=results/confusion_0/best_pred.npy --prey=results/confusi
 ```
 Not specifying --pred or --prey will generate a random genotype for both of them.
 
-![Example](visualisations/rendering.gif)
+<p align="center">
+  <img src="visualisations/rendering.gif">
+</p>
 
 ## Controllers
 
