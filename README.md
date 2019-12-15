@@ -98,9 +98,15 @@ One example of rendering command might be :
 python render.py --pred=results/confusion_0/best_pred.npy --prey=results/confusion_0/best_prey.npy --fps 30
 
 ```
-Not specifying --pred or --prey will generate a random genotype for both of them.
+Not specifying --pred or --prey will generate a random genotype for both of them.  
+  
+ 
 
-![Example](visualisations/rendering.gif)
+<p align="center">
+  <img src="visualisations/rendering.gif">
+</p>  
+  
+  
 
 ## Controllers
 
@@ -110,11 +116,15 @@ The only difference between the two networks is the number of input parameters a
 
 In order to visualize properly , here is a representation of the predator network :
 
-![pred_network](visualisations/pred.png)
+<p align="center">
+  <img src="visualisations/pred.png">
+</p>
 
 And the following is the prey network :
 
-![prey_network](visualisations/prey.png)
+<p align="center">
+  <img src="visualisations/prey.png">
+</p>
 
 ## Results
 
@@ -130,9 +140,11 @@ We ran 10 co evolutions with the following parameters :
 
 We observed the following :
 
-![Survivorship](visualisations/speed_1_3/Figure_1.png)
-![Density](visualisations/speed_1_3/Figure_2.png)
-![Dispersion](visualisations/speed_1_3/Figure_3.png)
+<p align="center">
+  <img src="visualisations/speed_1_3/Figure_1.png">
+  <img src="visualisations/speed_1_3/Figure_2.png">
+  <img src="visualisations/speed_1_3/Figure_3.png">
+</p>
 
 As in the paper, we observed swarming behaviour with confusion but never without confusion.
 
@@ -146,8 +158,11 @@ On a side note, during development we noticed that with higher speed, swarming b
 * predator_speed = 9
 * prey_speed = 3
 
-![Survivorship](visualisations/speed_3_9/Figure_1.png)
-![Density](visualisations/speed_3_9/Figure_2.png)
-![Dispersion](visualisations/speed_3_9/Figure_3.png)
+<p align="center">
+  <img src="visualisations/speed_3_9/Figure_1.png">
+  <img src="visualisations/speed_3_9/Figure_2.png">
+  <img src="visualisations/speed_3_9/Figure_3.png">
+</p>
+
 
 Which tends to prove that even if confusion is a sufficient condition to the emergence of swarming behaviour, it is not a necessary condition.
