@@ -98,11 +98,15 @@ One example of rendering command might be :
 python render.py --pred=results/confusion_0/best_pred.npy --prey=results/confusion_0/best_prey.npy --fps 30
 
 ```
-Not specifying --pred or --prey will generate a random genotype for both of them.
+Not specifying --pred or --prey will generate a random genotype for both of them.  
+  
+ 
 
 <p align="center">
   <img src="visualisations/rendering.gif">
-</p>
+</p>  
+  
+  
 
 ## Controllers
 
@@ -112,11 +116,15 @@ The only difference between the two networks is the number of input parameters a
 
 In order to visualize properly , here is a representation of the predator network :
 
-![pred_network](visualisations/pred.png)
+<p align="center">
+  <img src="visualisations/pred.png">
+</p>
 
 And the following is the prey network :
 
-![prey_network](visualisations/prey.png)
+<p align="center">
+  <img src="visualisations/prey.png">
+</p>
 
 ## Results
 
