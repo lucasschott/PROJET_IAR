@@ -132,9 +132,11 @@ We ran 10 co evolutions with the following parameters :
 
 We observed the following :
 
-![Survivorship](visualisations/speed_1_3/Figure_1.png)
-![Density](visualisations/speed_1_3/Figure_2.png)
-![Dispersion](visualisations/speed_1_3/Figure_3.png)
+<p align="center">
+  <img src="visualisations/speed_1_3/Figure_1.png">
+  <img src="visualisations/speed_1_3/Figure_2.png">
+  <img src="visualisations/speed_1_3/Figure_3.png">
+</p>
 
 As in the paper, we observed swarming behaviour with confusion but never without confusion.
 
@@ -148,8 +150,11 @@ On a side note, during development we noticed that with higher speed, swarming b
 * predator_speed = 9
 * prey_speed = 3
 
-![Survivorship](visualisations/speed_3_9/Figure_1.png)
-![Density](visualisations/speed_3_9/Figure_2.png)
-![Dispersion](visualisations/speed_3_9/Figure_3.png)
+<p align="center">
+  <img src="visualisations/speed_3_9/Figure_1.png">
+  <img src="visualisations/speed_3_9/Figure_2.png">
+  <img src="visualisations/speed_3_9/Figure_3.png">
+</p>
+
 
 Which tends to prove that even if confusion is a sufficient condition to the emergence of swarming behaviour, it is not a necessary condition.
