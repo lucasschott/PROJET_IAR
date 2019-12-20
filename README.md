@@ -141,9 +141,9 @@ We ran 10 co evolutions with the following parameters :
 We observed the following :
 
 <p align="center">
-  <img src="visualisations/speed_1_3/Figure_1.png">
-  <img src="visualisations/speed_1_3/Figure_2.png">
-  <img src="visualisations/speed_1_3/Figure_3.png">
+  <img src="visualisations/speed_1_3/1_3_density.png">
+  <img src="visualisations/speed_1_3/1_3_dispersion.png">
+  <img src="visualisations/speed_1_3/1_3_survivorship.png">
 </p>
 
 As in the paper, we observed swarming behaviour with confusion but never without confusion.
@@ -159,9 +159,9 @@ On a side note, during development we noticed that with higher speed, swarming b
 * prey_speed = 3
 
 <p align="center">
-  <img src="visualisations/speed_3_9/Figure_1.png">
-  <img src="visualisations/speed_3_9/Figure_2.png">
-  <img src="visualisations/speed_3_9/Figure_3.png">
+  <img src="visualisations/speed_3_9/3_9_density.png">
+  <img src="visualisations/speed_3_9/3_9_dispersion.png">
+  <img src="visualisations/speed_3_9/3_9_survivorship.png">
 </p>
 
 
